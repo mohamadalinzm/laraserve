@@ -161,7 +161,26 @@ class AppointmentTest extends TestCase
         }
     }
 
+    public function testValidationOnAddAppointmentWithoutCountAndDurationWithBuilder()
+    {
+        $this->expectException(ValidationException::class);
 
+        try {
+
+            AppointmentFacade::setAgent($this->agent)
+                ->setClient($this->client)
+                ->startTime(now()->format('Y-m-d H:i'))
+                ->save();
+
+        } catch (ValidationException $e) {
+            $errors = $e->validator->errors();
+
+            $this->assertTrue($errors->has('end_time'), 'Validation error for end_time is missing');
+
+            throw $e;
+        }
+    }
+    
     protected function generateAppointment(): array
     {
         // Generate a random start time within the next month
