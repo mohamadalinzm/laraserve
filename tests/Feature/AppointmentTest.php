@@ -14,7 +14,7 @@ class AppointmentTest extends TestCase
     public function testCreateAppointment()
     {
         //Arrange
-        $data = Appointment::factory()->make()->toArray();
+        $data = $this->generateAppointment();
         //Act
         $appointment = Appointment::query()->create($data);
         //Assert
