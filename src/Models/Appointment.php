@@ -17,13 +17,8 @@ class Appointment extends Model
         'clientable_type',
         'clientable_id',
         'start_time',
-        'end_time',
+        'end_time'
     ];
-
-    protected static function newFactory(): Factory
-    {
-        return AppointmentFactory::new();
-    }
 
     public function agentable(): MorphTo
     {
