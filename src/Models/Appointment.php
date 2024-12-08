@@ -20,4 +20,19 @@ class Appointment extends Model
         'end_time',
     ];
 
+    protected static function newFactory(): Factory
+    {
+        return AppointmentFactory::new();
+    }
+
+    public function agentable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    public function clientable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
 }
