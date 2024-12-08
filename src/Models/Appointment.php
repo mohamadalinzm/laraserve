@@ -2,8 +2,6 @@
 
 namespace Nzm\LaravelAppointment\Models;
 
-use Appointment\database\factories\AppointmentFactory;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;

@@ -1,12 +1,12 @@
 <?php
 
-namespace Tests\Feature;
+namespace Nzm\LaravelAppointment\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase;
 use Nzm\LaravelAppointment\Models\Appointment;
-use Tests\TestModels\Agent;
-use Tests\TestModels\Client;
+use Nzm\LaravelAppointment\Tests\TestModels\Agent;
+use Nzm\LaravelAppointment\Tests\TestModels\Client;
 
 class AppointmentTest extends TestCase
 {

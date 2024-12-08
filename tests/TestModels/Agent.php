@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\TestModels;
+namespace Nzm\LaravelAppointment\Tests\TestModels;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
