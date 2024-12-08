@@ -69,6 +69,26 @@ class AppointmentTest extends TestCase
         $this->assertDatabaseHas('appointments', $data);
     }
 
+    public function testBaseAddAppointmentWithBuilder()
+    {
+        $appointment = AppointmentFacade::setAgent($this->agent)
+            ->setClient($this->client)
+            ->startTime(now()->format('Y-m-d H:i'))
+            ->endTime(now()->addMinutes(30)->format('Y-m-d H:i'))
+            ->save();
+
+        $this->assertInstanceOf(Appointment::class, $appointment);
+        $this->assertDatabaseHas('appointments', [
+            'agentable_type' => get_class($this->agent),
+            'agentable_id' => $this->agent->id,
+            'clientable_type' => get_class($this->client),
+            'clientable_id' => $this->client->id,
+            'start_time' => $appointment->start_time,
+            'end_time' => $appointment->end_time
+        ]);
+    }
+
+
     protected function generateAppointment(): array
     {
         // Generate a random start time within the next month
