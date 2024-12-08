@@ -5,6 +5,7 @@ namespace Nzm\LaravelAppointment\Tests\Feature;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 use Nzm\LaravelAppointment\Facades\AppointmentFacade;
 use Orchestra\Testbench\TestCase;
 use Nzm\LaravelAppointment\Models\Appointment;
@@ -113,6 +114,28 @@ class AppointmentTest extends TestCase
                 'start_time' => $appointment->start_time,
                 'end_time' =>$appointment->end_time
             ]);
+        }
+    }
+
+    public function testValidationOnAddAppointmentViaCountAndWithoutDurationWithBuilder()
+    {
+        $this->expectException(ValidationException::class);
+
+        try {
+
+            AppointmentFacade::setAgent($this->agent)
+                ->setClient($this->client)
+                ->startTime(now()->format('Y-m-d H:i'))
+                ->count(3)
+                ->save();
+
+        } catch (ValidationException $e) {
+            $errors = $e->validator->errors();
+
+            $this->assertTrue($errors->has('end_time'), 'Validation error for end_time is missing');
+            $this->assertTrue($errors->has('duration'), 'Validation error for duration is missing');
+
+            throw $e;
         }
     }
 
