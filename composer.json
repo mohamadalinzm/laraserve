@@ -24,18 +24,24 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Nzm\\LaravelAppointment\\": "src/"
+            "Nzm\\LaravelAppointment\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Nzm\\LaravelAppointment\\Tests\\": "tests"
         }
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
     "config": {
         "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Nzm\\LaravelAppointment\\AppointmentServiceProvider"
+            ]
+        }
     }
-
 }
