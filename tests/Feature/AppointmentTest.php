@@ -2,7 +2,9 @@
 
 namespace Nzm\LaravelAppointment\Tests\Feature;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\TestCase;
 use Nzm\LaravelAppointment\Models\Appointment;
 use Nzm\LaravelAppointment\Tests\TestModels\Agent;
@@ -11,6 +13,51 @@ use Nzm\LaravelAppointment\Tests\TestModels\Client;
 class AppointmentTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected $agent;
+    protected $client;
+    protected $faker;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpDatabase();
+
+        $this->faker = \Faker\Factory::create();
+        $this->agent = Agent::query()->create(['name' => $this->faker->name]);
+        $this->client = Client::query()->create(['name' => $this->faker->name]);
+    }
+
+
+    protected function getEnvironmentSetUp($app): void
+    {
+        // Configure database connection
+        $app['config']->set('database.default', 'testdb');
+        $app['config']->set('database.connections.testdb', [
+            'driver'   => 'sqlite',
+            'database' => ':memory:',
+            'prefix'   => '',
+        ]);
+    }
+
+
+    protected function setUpDatabase(): void
+    {
+        $this->loadMigrationsFrom(__DIR__ . '/../../src/database/migrations');
+
+        Schema::create('agents', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        Schema::create('clients', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
+    }
+
     public function testCreateAppointment()
     {
         //Arrange
@@ -33,15 +80,12 @@ class AppointmentTest extends TestCase
         // Calculate end time based on start time and duration
         $endTime = (clone $startTime)->modify("+{$durationMinutes} minutes");
 
-        $agent = Agent::query()->create(['name' => $this->faker->name]);
-        $client = Client::query()->create(['name' => $this->faker->name]);
-
         return [
             'agentable_type' => Agent::class,
-            'agentable_id' => $agent->id,
+            'agentable_id' => $this->agent->id,
 
             'clientable_type' => Client::class,
-            'clientable_id' => $client->id,
+            'clientable_id' => $this->client->id,
 
             'start_time' => $startTime->format('Y-m-d H:i'),
             'end_time' => $endTime->format('Y-m-d H:i')
