@@ -88,6 +88,33 @@ class AppointmentTest extends TestCase
             'end_time' => $appointment->end_time
         ]);
     }
+    public function testAddAppointmentViaCountAndDurationWithBuilder()
+    {
+        $duration = 30;
+        $count = 3;
+        $appointments = AppointmentFacade::setAgent($this->agent)
+            ->setClient($this->client)
+            ->startTime(now()->format('Y-m-d H:i'))
+            ->duration($duration)
+            ->count($count)
+            ->save();
+
+        $this->assertIsArray($appointments);
+        $this->assertCount($count, $appointments);
+
+        foreach ($appointments as $appointment)
+        {
+            $this->assertInstanceOf(Appointment::class, $appointment);
+            $this->assertDatabaseHas('appointments', [
+                'agentable_type' => get_class($this->agent),
+                'agentable_id' => $this->agent->id,
+                'clientable_type' => get_class($this->client),
+                'clientable_id' => $this->client->id,
+                'start_time' => $appointment->start_time,
+                'end_time' =>$appointment->end_time
+            ]);
+        }
+    }
 
 
     protected function generateAppointment(): array
