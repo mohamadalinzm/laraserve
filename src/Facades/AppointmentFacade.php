@@ -2,8 +2,8 @@
 
 namespace Nzm\LaravelAppointment\Facades;
 
-use Appointment\Builder\AppointmentBuilder;
 use Illuminate\Support\Facades\Facade;
+use Nzm\LaravelAppointment\Builder\AppointmentBuilder;
 
 
 class AppointmentFacade extends Facade
