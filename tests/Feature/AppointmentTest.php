@@ -5,6 +5,7 @@ namespace Nzm\LaravelAppointment\Tests\Feature;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Nzm\LaravelAppointment\Facades\AppointmentFacade;
 use Orchestra\Testbench\TestCase;
 use Nzm\LaravelAppointment\Models\Appointment;
 use Nzm\LaravelAppointment\Tests\TestModels\Agent;
