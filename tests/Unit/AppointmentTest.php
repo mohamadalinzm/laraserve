@@ -1,6 +1,6 @@
 <?php
 
-namespace Nzm\Appointment\Tests\Feature;
+namespace Nzm\Appointment\Tests\Unit;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -60,6 +60,29 @@ class AppointmentTest extends TestCase
         });
     }
 
+    protected function generateAppointment(): array
+    {
+        // Generate a random start time within the next month
+        $startTime = $this->faker->dateTimeBetween('now', '+1 month');
+
+        // Assume duration is in minutes; adjust as needed
+        $durationMinutes = $this->faker->numberBetween(30, 120);
+
+        // Calculate end time based on start time and duration
+        $endTime = (clone $startTime)->modify("+{$durationMinutes} minutes");
+
+        return [
+            'agentable_type' => Agent::class,
+            'agentable_id' => $this->agent->id,
+
+            'clientable_type' => Client::class,
+            'clientable_id' => $this->client->id,
+
+            'start_time' => $startTime->format('Y-m-d H:i'),
+            'end_time' => $endTime->format('Y-m-d H:i')
+        ];
+    }
+
     public function testCreateAppointment()
     {
         //Arrange
@@ -71,7 +94,7 @@ class AppointmentTest extends TestCase
         $this->assertDatabaseHas('appointments', $data);
     }
 
-    public function testBaseAddAppointmentWithBuilder()
+    public function testCreateAppointmentWithBuilder()
     {
         $appointment = AppointmentFacade::setAgent($this->agent)
             ->setClient($this->client)
@@ -180,28 +203,24 @@ class AppointmentTest extends TestCase
             throw $e;
         }
     }
-    
-    protected function generateAppointment(): array
+
+    public function testValidationOnAddAppointmentWithoutStartTimeWithBuilder()
     {
-        // Generate a random start time within the next month
-        $startTime = $this->faker->dateTimeBetween('now', '+1 month');
+        $this->expectException(ValidationException::class);
 
-        // Assume duration is in minutes; adjust as needed
-        $durationMinutes = $this->faker->numberBetween(30, 120);
+        try {
 
-        // Calculate end time based on start time and duration
-        $endTime = (clone $startTime)->modify("+{$durationMinutes} minutes");
+            AppointmentFacade::setAgent($this->agent)
+                ->setClient($this->client)
+                ->save();
 
-        return [
-            'agentable_type' => Agent::class,
-            'agentable_id' => $this->agent->id,
+        } catch (ValidationException $e) {
+            $errors = $e->validator->errors();
 
-            'clientable_type' => Client::class,
-            'clientable_id' => $this->client->id,
+            $this->assertTrue($errors->has('start_time'), 'Validation error for start_time is missing');
 
-            'start_time' => $startTime->format('Y-m-d H:i'),
-            'end_time' => $endTime->format('Y-m-d H:i')
-        ];
+            throw $e;
+        }
     }
 
 }

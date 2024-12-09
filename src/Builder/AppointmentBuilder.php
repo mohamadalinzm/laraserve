@@ -54,13 +54,18 @@ class AppointmentBuilder
         return $this;
     }
 
+    protected function createAppointment(array $data): Appointment
+    {
+        return Appointment::query()->create($data);
+    }
+
     /**
      * @throws ValidationException
      */
     protected function validate(): void
     {
         $validator = Validator::make([
-            'agentable_id' => $this->agentable->id,
+            'agentable_id' => $this->agentable?->id,
             'agentable_type' => get_class($this->agentable),
             'clientable_id' => $this->clientable->id,
             'clientable_type' => get_class($this->clientable),
@@ -118,14 +123,17 @@ class AppointmentBuilder
 
                 //convert start time string to Carbon instance
                 $this->endTime = now()->parse($this->startTime)->addMinutes($this->duration)->format('Y-m-d H:i');
-                $appointments[] = Appointment::query()->create([
+
+                $appointmentData = [
                     'agentable_id' => $this->agentable->id,
                     'agentable_type' => get_class($this->agentable),
                     'clientable_id' => $this->clientable->id,
                     'clientable_type' => get_class($this->clientable),
                     'start_time' => $this->startTime,
                     'end_time' => $this->endTime,
-                ]);
+                ];
+
+                $appointments[] = $this->createAppointment($appointmentData);
 
                 $this->startTime = $this->endTime;
             }
@@ -133,7 +141,7 @@ class AppointmentBuilder
             return $appointments;
         }
 
-        return Appointment::query()->create([
+        return $this->createAppointment([
             'agentable_id' => $this->agentable->id,
             'agentable_type' => get_class($this->agentable),
             'clientable_id' => $this->clientable->id,
