@@ -1,6 +1,6 @@
 <?php
 
-namespace Nzm\Appointment\Tests\Unit;
+namespace Nzm\Appointment\Tests\Feature\Models;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,7 +45,7 @@ class AppointmentTest extends TestCase
 
     protected function setUpDatabase(): void
     {
-        $this->loadMigrationsFrom(__DIR__.'/../../src/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../../../src/database/migrations');
 
         Schema::create('agents', function (Blueprint $table) {
             $table->id();
