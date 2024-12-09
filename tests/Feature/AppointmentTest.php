@@ -1,16 +1,16 @@
 <?php
 
-namespace Nzm\LaravelAppointment\Tests\Feature;
+namespace Nzm\Appointment\Tests\Feature;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
-use Nzm\LaravelAppointment\Facades\AppointmentFacade;
+use Nzm\Appointment\Facades\AppointmentFacade;
 use Orchestra\Testbench\TestCase;
-use Nzm\LaravelAppointment\Models\Appointment;
-use Nzm\LaravelAppointment\Tests\TestModels\Agent;
-use Nzm\LaravelAppointment\Tests\TestModels\Client;
+use Nzm\Appointment\Models\Appointment;
+use Nzm\Appointment\Tests\TestModels\Agent;
+use Nzm\Appointment\Tests\TestModels\Client;
 
 class AppointmentTest extends TestCase
 {

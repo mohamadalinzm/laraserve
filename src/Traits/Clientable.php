@@ -1,9 +1,9 @@
 <?php
 
-namespace Nzm\LaravelAppointment\Traits;
+namespace Nzm\Appointment\Traits;
 
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Nzm\LaravelAppointment\Models\Appointment;
+use Nzm\Appointment\Models\Appointment;
 
 trait Clientable
 {

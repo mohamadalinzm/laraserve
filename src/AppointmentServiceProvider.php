@@ -1,10 +1,10 @@
 <?php
 
-namespace Nzm\LaravelAppointment;
+namespace Nzm\Appointment;
 
 
 use Illuminate\Support\ServiceProvider;
-use Nzm\LaravelAppointment\Builder\AppointmentBuilder;
+use Nzm\Appointment\Builder\AppointmentBuilder;
 
 class AppointmentServiceProvider extends ServiceProvider
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Nzm\LaravelAppointment\Tests\TestModels;
+namespace Nzm\Appointment\Tests\TestModels;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Nzm\LaravelAppointment\Traits\Clientable;
+use Nzm\Appointment\Traits\Clientable;
 
 class Client extends Model
 {

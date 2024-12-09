@@ -1,6 +1,6 @@
 <?php
 
-namespace Nzm\LaravelAppointment\Models;
+namespace Nzm\Appointment\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

@@ -1,12 +1,12 @@
 <?php
 
-namespace Nzm\LaravelAppointment\Builder;
+namespace Nzm\Appointment\Builder;
 
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
-use Nzm\LaravelAppointment\Models\Appointment;
+use Nzm\Appointment\Models\Appointment;
 
 class AppointmentBuilder
 {

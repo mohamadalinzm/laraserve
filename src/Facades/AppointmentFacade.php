@@ -1,9 +1,9 @@
 <?php
 
-namespace Nzm\LaravelAppointment\Facades;
+namespace Nzm\Appointment\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Nzm\LaravelAppointment\Builder\AppointmentBuilder;
+use Nzm\Appointment\Builder\AppointmentBuilder;
 
 
 class AppointmentFacade extends Facade
