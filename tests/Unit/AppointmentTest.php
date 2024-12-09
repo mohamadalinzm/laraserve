@@ -7,17 +7,19 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Nzm\Appointment\Facades\AppointmentFacade;
-use Orchestra\Testbench\TestCase;
 use Nzm\Appointment\Models\Appointment;
 use Nzm\Appointment\Tests\TestModels\Agent;
 use Nzm\Appointment\Tests\TestModels\Client;
+use Orchestra\Testbench\TestCase;
 
 class AppointmentTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $agent;
+
     protected $client;
+
     protected $faker;
 
     protected function setUp(): void
@@ -30,22 +32,20 @@ class AppointmentTest extends TestCase
         $this->client = Client::query()->create(['name' => $this->faker->name]);
     }
 
-
     protected function getEnvironmentSetUp($app): void
     {
         // Configure database connection
         $app['config']->set('database.default', 'testdb');
         $app['config']->set('database.connections.testdb', [
-            'driver'   => 'sqlite',
+            'driver' => 'sqlite',
             'database' => ':memory:',
-            'prefix'   => '',
+            'prefix' => '',
         ]);
     }
 
-
     protected function setUpDatabase(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/../../src/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../../src/database/migrations');
 
         Schema::create('agents', function (Blueprint $table) {
             $table->id();
@@ -79,11 +79,11 @@ class AppointmentTest extends TestCase
             'clientable_id' => $this->client->id,
 
             'start_time' => $startTime->format('Y-m-d H:i'),
-            'end_time' => $endTime->format('Y-m-d H:i')
+            'end_time' => $endTime->format('Y-m-d H:i'),
         ];
     }
 
-    public function testCreateAppointment()
+    public function test_create_appointment()
     {
         //Arrange
         $data = $this->generateAppointment();
@@ -94,7 +94,7 @@ class AppointmentTest extends TestCase
         $this->assertDatabaseHas('appointments', $data);
     }
 
-    public function testCreateAppointmentWithBuilder()
+    public function test_create_appointment_with_builder()
     {
         $appointment = AppointmentFacade::setAgent($this->agent)
             ->setClient($this->client)
@@ -109,10 +109,11 @@ class AppointmentTest extends TestCase
             'clientable_type' => get_class($this->client),
             'clientable_id' => $this->client->id,
             'start_time' => $appointment->start_time,
-            'end_time' => $appointment->end_time
+            'end_time' => $appointment->end_time,
         ]);
     }
-    public function testAddAppointmentViaCountAndDurationWithBuilder()
+
+    public function test_add_appointment_via_count_and_duration_with_builder()
     {
         $duration = 30;
         $count = 3;
@@ -126,8 +127,7 @@ class AppointmentTest extends TestCase
         $this->assertIsArray($appointments);
         $this->assertCount($count, $appointments);
 
-        foreach ($appointments as $appointment)
-        {
+        foreach ($appointments as $appointment) {
             $this->assertInstanceOf(Appointment::class, $appointment);
             $this->assertDatabaseHas('appointments', [
                 'agentable_type' => get_class($this->agent),
@@ -135,12 +135,12 @@ class AppointmentTest extends TestCase
                 'clientable_type' => get_class($this->client),
                 'clientable_id' => $this->client->id,
                 'start_time' => $appointment->start_time,
-                'end_time' =>$appointment->end_time
+                'end_time' => $appointment->end_time,
             ]);
         }
     }
 
-    public function testValidationOnAddAppointmentViaCountAndWithoutDurationWithBuilder()
+    public function test_validation_on_add_appointment_via_count_and_without_duration_with_builder()
     {
         $this->expectException(ValidationException::class);
 
@@ -162,7 +162,7 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function testValidationOnAddAppointmentViaDurationAndWithoutCountWithBuilder()
+    public function test_validation_on_add_appointment_via_duration_and_without_count_with_builder()
     {
         $this->expectException(ValidationException::class);
 
@@ -184,7 +184,7 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function testValidationOnAddAppointmentWithoutCountAndDurationWithBuilder()
+    public function test_validation_on_add_appointment_without_count_and_duration_with_builder()
     {
         $this->expectException(ValidationException::class);
 
@@ -204,7 +204,7 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function testValidationOnAddAppointmentWithoutStartTimeWithBuilder()
+    public function test_validation_on_add_appointment_without_start_time_with_builder()
     {
         $this->expectException(ValidationException::class);
 
@@ -222,5 +222,4 @@ class AppointmentTest extends TestCase
             throw $e;
         }
     }
-
 }

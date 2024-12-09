@@ -8,7 +8,6 @@ use Nzm\Appointment\Models\Appointment;
 
 trait Clientable
 {
-
     public function clientAppointments(): MorphMany
     {
         return $this->morphMany(Appointment::class, 'clientable');
@@ -27,5 +26,4 @@ trait Clientable
             ->where('start_time', '>', now())
             ->get();
     }
-
 }

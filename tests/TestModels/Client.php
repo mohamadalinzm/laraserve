@@ -8,8 +8,9 @@ use Nzm\Appointment\Traits\Clientable;
 
 class Client extends Model
 {
-    use HasFactory,Clientable;
+    use Clientable,HasFactory;
 
     protected $table = 'clients';
+
     protected $fillable = ['name'];
 }

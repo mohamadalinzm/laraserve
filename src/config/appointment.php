@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'duplicate' => false
+    'duplicate' => false,
 ];

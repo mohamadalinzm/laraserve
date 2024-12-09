@@ -8,8 +8,9 @@ use Nzm\Appointment\Traits\Agentable;
 
 class Agent extends Model
 {
-    use HasFactory,Agentable;
+    use Agentable,HasFactory;
 
     protected $table = 'agents';
+
     protected $fillable = ['name'];
 }
