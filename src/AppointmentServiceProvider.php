@@ -18,6 +18,10 @@ class AppointmentServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+
+        $this->publishes([
+            __DIR__ . '/config/appointment.php' => config_path('appointment.php'),
+        ]);
     }
 
 }
