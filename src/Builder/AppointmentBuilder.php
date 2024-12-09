@@ -74,13 +74,24 @@ class AppointmentBuilder
             'clientable_id' => 'sometimes|integer|exists:' . $this->clientable->getTable() . ',id',
             'clientable_type' => 'sometimes|string',
             'start_time' => [
-                'required', 'date_format:Y-m-d H:i', 'before:end_time',
-                Rule::unique('appointments')->where(function ($query) {
-                    return $query->where('agentable_id', $this->agentable->id)
-                        ->where('agentable_type', get_class($this->agentable))
-                        ->where('clientable_id', $this->clientable->id)
-                        ->where('clientable_type', get_class($this->clientable));
-                }),
+                'required',
+                'date_format:Y-m-d H:i',
+                'before:end_time',
+                function($attribute, $value, $fail) {
+                    if (!config('appointment.duplicate', false)) {
+                        $exists = Appointment::query()
+                            ->where('agentable_id', $this->agentable->id)
+                            ->where('agentable_type', get_class($this->agentable))
+                            ->where('clientable_id', $this->clientable->id)
+                            ->where('clientable_type', get_class($this->clientable))
+                            ->where('start_time', $value)
+                            ->exists();
+
+                        if ($exists) {
+                            $fail("An appointment at this time already exists.");
+                        }
+                    }
+                }
             ],
             'end_time' => ['nullable','required_without:duration,count','date_format:Y-m-d H:i','after:start_time'],
             'count' => ['nullable', 'integer', 'min:1', 'required_with:duration'],
