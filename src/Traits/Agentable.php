@@ -8,14 +8,14 @@ use Nzm\Appointment\Models\Appointment;
 
 trait Agentable
 {
-    public function agentAppointments(): MorphMany
+    public function appointments(): MorphMany
     {
         return $this->morphMany(Appointment::class, 'agentable');
     }
 
     public function getAvailableSlots(): Collection
     {
-        return $this->agentAppointments()
+        return $this->appointments()
             ->whereNull('clientable_id')
             ->where('start_time', '>', now())
             ->get();
@@ -23,15 +23,14 @@ trait Agentable
 
     public function getBookedSlots(): Collection
     {
-        return $this->agentAppointments()
+        return $this->appointments()
             ->whereNotNull('clientable_id')
-            ->where('start_time', '>', now())
             ->get();
     }
 
     public function getUpComingBookedSlots(): Collection
     {
-        return $this->agentAppointments()
+        return $this->appointments()
             ->whereNotNull('clientable_id')
             ->where('start_time', '>', now())
             ->get();
