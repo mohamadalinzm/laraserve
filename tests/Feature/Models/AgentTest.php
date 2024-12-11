@@ -3,6 +3,7 @@
 namespace Nzm\Appointment\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Nzm\Appointment\Facades\AppointmentFacade;
 use Nzm\Appointment\Models\Appointment;
 use Nzm\Appointment\Tests\Traits\SetUpDatabase;
 use Orchestra\Testbench\TestCase;
@@ -85,5 +86,21 @@ class AgentTest extends TestCase
         $upcomingBookedSlots = $this->agent->getUpComingBookedSlots();
         //Assert
         $this->assertCount(1, $upcomingBookedSlots);
+    }
+
+    public function test_get_slots_by_date()
+    {
+        //Arrange
+        $start_time = now()->addDay();
+
+        AppointmentFacade::setAgent($this->agent)
+            ->startTime($start_time->format('Y-m-d H:i'))
+            ->count(5)
+            ->duration(30)
+            ->save();
+        //Act
+        $slots = $this->agent->getSlotsByDate($start_time->toDateString());
+        //Assert
+        $this->assertCount(5, $slots);
     }
 }
