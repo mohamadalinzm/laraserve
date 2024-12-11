@@ -10,7 +10,7 @@ class AppointmentBuilder
 {
     protected $agentable;
 
-    protected $clientable;
+    protected $clientable = null;
 
     protected $startTime;
 
@@ -27,7 +27,7 @@ class AppointmentBuilder
         return $this;
     }
 
-    public function setClient($clientable): static
+    public function setClient($clientable = null): static
     {
         $this->clientable = $clientable;
 
@@ -72,33 +72,36 @@ class AppointmentBuilder
      */
     protected function validate(): void
     {
-        $validator = Validator::make([
+        $validationData = [
             'agentable_id' => $this->agentable?->id,
             'agentable_type' => get_class($this->agentable),
-            'clientable_id' => $this->clientable->id,
-            'clientable_type' => get_class($this->clientable),
             'start_time' => $this->startTime,
             'end_time' => $this->endTime,
             'count' => $this->count,
             'duration' => $this->duration,
-        ], [
+        ];
+
+        $validationRules = [
             'agentable_id' => 'required|integer|exists:'.$this->agentable->getTable().',id',
             'agentable_type' => 'required|string',
-            'clientable_id' => 'sometimes|integer|exists:'.$this->clientable->getTable().',id',
-            'clientable_type' => 'sometimes|string',
             'start_time' => [
                 'required',
                 'date_format:Y-m-d H:i',
                 'before:end_time',
                 function ($attribute, $value, $fail) {
                     if (! config('appointment.duplicate', false)) {
-                        $exists = Appointment::query()
+                        $query = Appointment::query()
                             ->where('agentable_id', $this->agentable->id)
                             ->where('agentable_type', get_class($this->agentable))
-                            ->where('clientable_id', $this->clientable->id)
-                            ->where('clientable_type', get_class($this->clientable))
-                            ->where('start_time', $value)
-                            ->exists();
+                            ->where('start_time', $value);
+
+                        // Only check for existing appointment if a client is set
+                        if ($this->clientable) {
+                            $query->where('clientable_id', $this->clientable->id)
+                                ->where('clientable_type', get_class($this->clientable));
+                        }
+
+                        $exists = $query->exists();
 
                         if ($exists) {
                             $fail('An appointment at this time already exists.');
@@ -109,7 +112,18 @@ class AppointmentBuilder
             'end_time' => ['nullable', 'required_without:duration,count', 'date_format:Y-m-d H:i', 'after:start_time'],
             'count' => ['nullable', 'integer', 'min:1', 'required_with:duration'],
             'duration' => ['nullable', 'integer', 'min:1', 'required_with:count'],
-        ]);
+        ];
+
+        // Add optional client validation if client is set
+        if ($this->clientable) {
+            $validationData['clientable_id'] = $this->clientable->id;
+            $validationData['clientable_type'] = get_class($this->clientable);
+
+            $validationRules['clientable_id'] = 'sometimes|integer|exists:'.$this->clientable->getTable().',id';
+            $validationRules['clientable_type'] = 'sometimes|string';
+        }
+
+        $validator = Validator::make($validationData, $validationRules);
 
         if ($validator->fails()) {
             throw new ValidationException($validator);
@@ -126,20 +140,22 @@ class AppointmentBuilder
         $appointments = [];
 
         if ($this->duration && $this->count) {
-
             for ($i = 0; $i < $this->count; $i++) {
-
                 //convert start time string to Carbon instance
                 $this->endTime = now()->parse($this->startTime)->addMinutes($this->duration)->format('Y-m-d H:i');
 
                 $appointmentData = [
                     'agentable_id' => $this->agentable->id,
                     'agentable_type' => get_class($this->agentable),
-                    'clientable_id' => $this->clientable->id,
-                    'clientable_type' => get_class($this->clientable),
                     'start_time' => $this->startTime,
                     'end_time' => $this->endTime,
                 ];
+
+                // Add client data only if clientable is set
+                if ($this->clientable) {
+                    $appointmentData['clientable_id'] = $this->clientable->id;
+                    $appointmentData['clientable_type'] = get_class($this->clientable);
+                }
 
                 $appointments[] = $this->createAppointment($appointmentData);
 
@@ -149,14 +165,19 @@ class AppointmentBuilder
             return $appointments;
         }
 
-        return $this->createAppointment([
+        $appointmentData = [
             'agentable_id' => $this->agentable->id,
             'agentable_type' => get_class($this->agentable),
-            'clientable_id' => $this->clientable->id,
-            'clientable_type' => get_class($this->clientable),
             'start_time' => $this->startTime,
             'end_time' => $this->endTime,
-        ]);
+        ];
 
+        // Add client data only if clientable is set
+        if ($this->clientable) {
+            $appointmentData['clientable_id'] = $this->clientable->id;
+            $appointmentData['clientable_type'] = get_class($this->clientable);
+        }
+
+        return $this->createAppointment($appointmentData);
     }
 }
