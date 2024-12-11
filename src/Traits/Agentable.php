@@ -35,4 +35,11 @@ trait Agentable
             ->where('start_time', '>', now())
             ->get();
     }
+
+    public function getSlotsByDate($date): Collection
+    {
+        return $this->agentAppointments()
+            ->whereDate('start_time', $date)
+            ->get();
+    }
 }
