@@ -36,5 +36,4 @@ trait Clientable
 
         return $appointment;
     }
-
 }

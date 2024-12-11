@@ -75,5 +75,4 @@ trait SetUpDatabase
             'end_time' => $endTime->format('Y-m-d H:i'),
         ];
     }
-
 }
