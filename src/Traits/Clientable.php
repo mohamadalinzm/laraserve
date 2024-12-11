@@ -26,4 +26,15 @@ trait Clientable
             ->where('start_time', '>', now())
             ->get();
     }
+
+    //make function to book existed appointment for client
+    public function bookAppointment($appointment): Appointment
+    {
+        $appointment->clientable_id = $this->id;
+        $appointment->clientable_type = get_class($this);
+        $appointment->save();
+
+        return $appointment;
+    }
+
 }
