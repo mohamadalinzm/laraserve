@@ -2,6 +2,7 @@
 
 namespace Nzm\Appointment\Builder;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Nzm\Appointment\Models\Appointment;
@@ -137,39 +138,53 @@ class AppointmentBuilder
     {
         $this->validate();
 
+        // If duration and count are set, create multiple appointments
+        if ($this->duration && $this->count) {
+            return $this->createMultipleAppointments();
+        }
+
+        // Otherwise, create a single appointment
+        return $this->createSingleAppointment();
+    }
+
+    private function createMultipleAppointments(): array
+    {
         $appointments = [];
 
-        if ($this->duration && $this->count) {
+        return DB::transaction(function () use (&$appointments) {
             for ($i = 0; $i < $this->count; $i++) {
-                //convert start time string to Carbon instance
-                $this->endTime = now()->parse($this->startTime)->addMinutes($this->duration)->format('Y-m-d H:i');
+                // Convert start time string to Carbon instance
+                $this->endTime = now()->parse($this->startTime)
+                    ->addMinutes($this->duration)
+                    ->format('Y-m-d H:i');
 
-                $appointmentData = [
-                    'agentable_id' => $this->agentable->id,
-                    'agentable_type' => get_class($this->agentable),
-                    'start_time' => $this->startTime,
-                    'end_time' => $this->endTime,
-                ];
-
-                // Add client data only if clientable is set
-                if ($this->clientable) {
-                    $appointmentData['clientable_id'] = $this->clientable->id;
-                    $appointmentData['clientable_type'] = get_class($this->clientable);
-                }
-
-                $appointments[] = $this->createAppointment($appointmentData);
+                $appointments[] = $this->createAppointment(
+                    $this->prepareAppointmentData($this->startTime, $this->endTime)
+                );
 
                 $this->startTime = $this->endTime;
             }
 
             return $appointments;
-        }
+        });
+    }
 
+    private function createSingleAppointment(): Appointment
+    {
+        return DB::transaction(function () {
+            return $this->createAppointment(
+                $this->prepareAppointmentData($this->startTime, $this->endTime)
+            );
+        });
+    }
+
+    private function prepareAppointmentData(string $startTime, string $endTime): array
+    {
         $appointmentData = [
             'agentable_id' => $this->agentable->id,
             'agentable_type' => get_class($this->agentable),
-            'start_time' => $this->startTime,
-            'end_time' => $this->endTime,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
         ];
 
         // Add client data only if clientable is set
@@ -178,6 +193,6 @@ class AppointmentBuilder
             $appointmentData['clientable_type'] = get_class($this->clientable);
         }
 
-        return $this->createAppointment($appointmentData);
+        return $appointmentData;
     }
 }
