@@ -1,5 +1,5 @@
 {
-    "name": "nzm/laravel-appointment",
+    "name": "nazemi/laravel-appointment",
     "description": "Create a basic appointment system for any model",
     "type": "library",
     "keywords": [
