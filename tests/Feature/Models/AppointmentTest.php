@@ -43,12 +43,11 @@ class AppointmentTest extends TestCase
         ]);
     }
 
-    public function test_add_appointment_via_count_and_duration_with_builder()
+    public function test_create_appointment_via_count_and_duration_with_builder()
     {
         $duration = 30;
         $count = 3;
         $appointments = AppointmentFacade::setAgent($this->agent)
-            ->setClient($this->client)
             ->startTime(now()->format('Y-m-d H:i'))
             ->duration($duration)
             ->count($count)
@@ -62,8 +61,6 @@ class AppointmentTest extends TestCase
             $this->assertDatabaseHas('appointments', [
                 'agentable_type' => get_class($this->agent),
                 'agentable_id' => $this->agent->id,
-                'clientable_type' => get_class($this->client),
-                'clientable_id' => $this->client->id,
                 'start_time' => $appointment->start_time,
                 'end_time' => $appointment->end_time,
             ]);
