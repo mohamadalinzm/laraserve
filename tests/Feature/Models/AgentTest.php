@@ -16,7 +16,7 @@ class AgentTest extends TestCase
         //Arrange
         $data = $this->generateAppointment();
         //Act
-        $appointment = $this->agent->appointments()->create($data);
+        $appointment = $this->agent->agentAppointments()->create($data);
         //Assert
         $this->assertInstanceOf(Appointment::class, $appointment);
         $this->assertDatabaseHas('appointments', $data);
@@ -33,7 +33,7 @@ class AgentTest extends TestCase
         unset($data['clientable_type']);
 
         //Act
-        $appointment = $this->agent->appointments()->create($data);
+        $appointment = $this->agent->agentAppointments()->create($data);
         //Assert
         $this->assertInstanceOf(Appointment::class, $appointment);
         $this->assertDatabaseHas('appointments', $data);
@@ -50,7 +50,7 @@ class AgentTest extends TestCase
         unset($data['clientable_id']);
         unset($data['clientable_type']);
 
-        $this->agent->appointments()->create($data);
+        $this->agent->agentAppointments()->create($data);
         //Act
         $availableSlots = $this->agent->getAvailableSlots();
         //Assert
@@ -65,7 +65,7 @@ class AgentTest extends TestCase
         unset($data['agentable_id']);
         unset($data['agentable_type']);
 
-        $this->agent->appointments()->create($data);
+        $this->agent->agentAppointments()->create($data);
         //Act
         $bookedSlots = $this->agent->getBookedSlots();
         //Assert
@@ -80,7 +80,7 @@ class AgentTest extends TestCase
         unset($data['agentable_id']);
         unset($data['agentable_type']);
 
-        $this->agent->appointments()->create($data);
+        $this->agent->agentAppointments()->create($data);
         //Act
         $upcomingBookedSlots = $this->agent->getUpComingBookedSlots();
         //Assert
