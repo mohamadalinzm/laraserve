@@ -152,17 +152,20 @@ class AppointmentBuilder
         $appointments = [];
 
         return DB::transaction(function () use (&$appointments) {
+            $currentStartTime = $this->startTime;
+
             for ($i = 0; $i < $this->count; $i++) {
-                // Convert start time string to Carbon instance
-                $this->endTime = now()->parse($this->startTime)
+                // Calculate end time based on the current start time
+                $endTime = now()->parse($currentStartTime)
                     ->addMinutes($this->duration)
                     ->format('Y-m-d H:i');
 
                 $appointments[] = $this->createAppointment(
-                    $this->prepareAppointmentData($this->startTime, $this->endTime)
+                    $this->prepareAppointmentData($currentStartTime, $endTime)
                 );
 
-                $this->startTime = $this->endTime;
+                // Update current start time for next iteration
+                $currentStartTime = $endTime;
             }
 
             return $appointments;
