@@ -3,6 +3,7 @@
 namespace Nzm\Appointment\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Nzm\Appointment\Exceptions\UnauthorizedAppointmentCancellationException;
 use Nzm\Appointment\Models\Appointment;
 use Nzm\Appointment\Tests\TestModels\Client;
 use Nzm\Appointment\Tests\Traits\SetUpDatabase;
@@ -198,5 +199,46 @@ class ClientTest extends TestCase
             'agentable_id' => $this->agent->id,
             'agentable_type' => get_class($this->agent)
         ]);
+    }
+
+    public function test_client_cancel_appointment_that_not_booked()
+    {
+        $this->expectException(UnauthorizedAppointmentCancellationException::class);
+        //Arrange
+        $data = $this->generateAppointment();
+        unset($data['clientable_id']);
+        unset($data['clientable_type']);
+        //Act
+        $appointment = $this->agent->agentAppointments()->create($data);
+        try {
+
+            $this->client->cancelAppointment($appointment);
+
+        } catch (UnauthorizedAppointmentCancellationException $e) {
+            //Assert
+            $this->assertEquals('You are not authorized to cancel this appointment.', $e->getMessage());
+
+            throw $e;
+        }
+    }
+
+    public function test_client_cancel_appointment_that_booked_by_another_client()
+    {
+        $this->expectException(UnauthorizedAppointmentCancellationException::class);
+        //Arrange
+        $data = $this->generateAppointment();
+        //Act
+        $appointment = $this->client->clientAppointments()->create($data);
+        $newClient = Client::query()->create(['name' => 'new client']);
+        try {
+
+            $newClient->cancelAppointment($appointment);
+
+        } catch (UnauthorizedAppointmentCancellationException $e) {
+            //Assert
+            $this->assertEquals('You are not authorized to cancel this appointment.', $e->getMessage());
+
+            throw $e;
+        }
     }
 }
