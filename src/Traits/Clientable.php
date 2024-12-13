@@ -28,11 +28,19 @@ trait Clientable
     }
 
     //make function to book existed appointment for client
-    public function bookAppointment($appointment): Appointment
+    public function bookAppointment(Appointment $appointment): Appointment
     {
         return tap($appointment)->update([
             'clientable_id' => $this->id,
             'clientable_type' => get_class($this),
+        ]);
+    }
+
+    public function cancelAppointment(Appointment $appointment)
+    {
+        return tap($appointment)->update([
+            'clientable_id' => null,
+            'clientable_type' => null,
         ]);
     }
 }
