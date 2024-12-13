@@ -180,4 +180,23 @@ class ClientTest extends TestCase
         $this->assertInstanceOf(Appointment::class, $appointment);
         $this->assertDatabaseHas('appointments', $data);
     }
+
+    public function test_client_cancel_appointment()
+    {
+        //Arrange
+        $data = $this->generateAppointment();
+        //Act
+        $appointment = $this->client->clientAppointments()->create($data);
+        $this->client->cancelAppointment($appointment);
+        //Assert
+        $this->assertInstanceOf(Appointment::class, $appointment);
+        $this->assertDatabaseHas('appointments', [
+            'start_time' => $appointment->start_time,
+            'end_time' => $appointment->end_time,
+            'clientable_id' => null,
+            'clientable_type' => null,
+            'agentable_id' => $this->agent->id,
+            'agentable_type' => get_class($this->agent)
+        ]);
+    }
 }
