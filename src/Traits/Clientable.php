@@ -4,6 +4,8 @@ namespace Nzm\Appointment\Traits;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Nzm\Appointment\Exceptions\AppointmentAlreadyBookedException;
+use Nzm\Appointment\Exceptions\UnauthorizedAppointmentCancellationException;
 use Nzm\Appointment\Models\Appointment;
 
 trait Clientable
@@ -27,17 +29,23 @@ trait Clientable
             ->get();
     }
 
-    //make function to book existed appointment for client
+
     public function bookAppointment(Appointment $appointment): Appointment
     {
+        if ($appointment->clientable_id !== null) {
+            throw new AppointmentAlreadyBookedException();
+        }
         return tap($appointment)->update([
             'clientable_id' => $this->id,
             'clientable_type' => get_class($this),
-        ]);
+        ]);$this->expectException(ValidationException::class);
     }
 
     public function cancelAppointment(Appointment $appointment)
     {
+        if ($appointment->clientable_id !== $this->id) {
+            throw new UnauthorizedAppointmentCancellationException();
+        }
         return tap($appointment)->update([
             'clientable_id' => null,
             'clientable_type' => null,
