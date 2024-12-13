@@ -7,7 +7,7 @@ This package provides a comprehensive appointment management system for Laravel 
 You can install the package via Composer:
 
 ```bash
-composer require nazemi/appointment
+composer require nazemi/laravel-appointment
 ```
 
 The package will automatically register itself.
