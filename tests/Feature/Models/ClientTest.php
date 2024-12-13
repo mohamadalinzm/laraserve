@@ -3,6 +3,7 @@
 namespace Nzm\Appointment\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Nzm\Appointment\Exceptions\AppointmentAlreadyBookedException;
 use Nzm\Appointment\Exceptions\UnauthorizedAppointmentCancellationException;
 use Nzm\Appointment\Models\Appointment;
 use Nzm\Appointment\Tests\TestModels\Client;
@@ -27,6 +28,27 @@ class ClientTest extends TestCase
         //Assert
         $this->assertInstanceOf(Appointment::class, $appointment);
         $this->assertDatabaseHas('appointments', $data);
+    }
+
+    public function test_book_appointment_that_already_booked()
+    {
+        $this->expectException(AppointmentAlreadyBookedException::class);
+        //Arrange
+        $data = $this->generateAppointment();
+        //Act
+        $appointment = $this->agent->agentAppointments()->create($data);
+        $this->client->bookAppointment($appointment);
+        $newClient = Client::query()->create(['name' => 'new client']);
+        try {
+
+            $newClient->bookAppointment($appointment);
+
+        } catch (AppointmentAlreadyBookedException $e) {
+            //Assert
+            $this->assertEquals('Appointment is already booked by another client.', $e->getMessage());
+
+            throw $e;
+        }
     }
 
     public function test_get_appointments_of_client()
