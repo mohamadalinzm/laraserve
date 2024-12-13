@@ -17,6 +17,7 @@ return new class extends Migration
             $table->nullableMorphs('clientable');
             $table->timestamp('start_time');
             $table->timestamp('end_time');
+            $table->text('note')->nullable();
             $table->timestamps();
 
             $table->unique(['agentable_id', 'agentable_type', 'start_time']);
