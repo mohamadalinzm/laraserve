@@ -36,7 +36,7 @@ class AppointmentTest extends TestCase
         $this->assertDatabaseHas('appointments', $data);
     }
 
-    public function test_create_appointment_with_builder()
+    public function test_create_appointment_via_facade()
     {
         $appointment = AppointmentFacade::setAgent($this->agent)
             ->setClient($this->client)
@@ -55,7 +55,7 @@ class AppointmentTest extends TestCase
         ]);
     }
 
-    public function test_create_appointment_with_facade()
+    public function test_create_appointment_with_note_via_facade()
     {
         //Arrange
         $note = 'This is a note';
@@ -79,7 +79,7 @@ class AppointmentTest extends TestCase
         ]);
     }
 
-    public function test_create_appointment_via_count_and_duration_with_facade()
+    public function test_create_appointment_via_count_and_duration_via_facade()
     {
         $duration = 30;
         $count = 3;
@@ -103,7 +103,7 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function test_validation_on_add_appointment_via_count_and_without_duration_with_facade()
+    public function test_validation_on_add_appointment_via_count_and_without_duration_via_facade()
     {
         $this->expectException(ValidationException::class);
 
@@ -125,7 +125,7 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function test_validation_on_add_appointment_via_duration_and_without_count_with_facade()
+    public function test_validation_on_add_appointment_via_duration_and_without_count_via_facade()
     {
         $this->expectException(ValidationException::class);
 
@@ -147,7 +147,7 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function test_validation_on_add_appointment_without_count_and_duration_with_facade()
+    public function test_validation_on_add_appointment_without_count_and_duration_via_facade()
     {
         $this->expectException(ValidationException::class);
 
@@ -167,7 +167,7 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function test_validation_on_add_appointment_without_start_time_with_facade()
+    public function test_validation_on_add_appointment_without_start_time_via_facade()
     {
         $this->expectException(ValidationException::class);
 
