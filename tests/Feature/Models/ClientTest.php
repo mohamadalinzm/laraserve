@@ -28,6 +28,48 @@ class ClientTest extends TestCase
         $this->assertDatabaseHas('appointments', $data);
     }
 
+    public function test_get_appointments_of_client()
+    {
+        //Arrange
+        $data = $this->generateAppointment();
+        //Act
+        $appointment = $this->agent->agentAppointments()->create($data);
+        $appointment2 = $this->agent->agentAppointments()->create([
+            'start_time' => now()->addDays(2),
+            'end_time' => now()->addDays(2)->addHour(),
+            'clientable_id' => $this->client->id,
+            'clientable_type' => get_class($this->client),
+        ]);
+        $appointment3 = $this->agent->agentAppointments()->create([
+            'start_time' => now()->subDays(2),
+            'end_time' => now()->subDays(2)->addHour(),
+            'clientable_id' => $this->client->id,
+            'clientable_type' => get_class($this->client),
+        ]);
+        //Assert
+        $this->assertInstanceOf(Appointment::class, $appointment);
+        $this->assertInstanceOf(Appointment::class, $appointment2);
+        $this->assertInstanceOf(Appointment::class, $appointment3);
+        $this->assertDatabaseHas('appointments', $data);
+        $this->assertDatabaseHas('appointments',[
+            'start_time' => $appointment2->start_time,
+            'end_time' => $appointment2->end_time,
+            'clientable_id' => $this->client->id,
+            'clientable_type' => get_class($this->client),
+            'agentable_id' => $this->agent->id,
+            'agentable_type' => get_class($this->agent)
+        ]);
+        $this->assertDatabaseHas('appointments',[
+            'start_time' => $appointment3->start_time,
+            'end_time' => $appointment3->end_time,
+            'clientable_id' => $this->client->id,
+            'clientable_type' => get_class($this->client),
+            'agentable_id' => $this->agent->id,
+            'agentable_type' => get_class($this->agent)
+        ]);
+        $this->assertCount(3, $this->client->clientAppointments);
+    }
+
     public function test_client_see_only_booked_appointments()
     {
         //Arrange
@@ -122,5 +164,20 @@ class ClientTest extends TestCase
             'agentable_type' => get_class($this->agent)
         ]);
         $this->assertCount(1, $this->client->getUpComingBookedSlots());
+    }
+
+    public function test_client_create_appointment()
+    {
+        //Arrange
+        $data = $this->generateAppointment();
+        unset($data['clientable_id']);
+        unset($data['clientable_type']);
+        //Act
+        $appointment = $this->client->clientAppointments()->create($data);
+        $data['clientable_id'] = $this->client->id;
+        $data['clientable_type'] = get_class($this->client);
+        //Assert
+        $this->assertInstanceOf(Appointment::class, $appointment);
+        $this->assertDatabaseHas('appointments', $data);
     }
 }
