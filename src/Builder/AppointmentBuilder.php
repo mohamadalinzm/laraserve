@@ -21,6 +21,8 @@ class AppointmentBuilder
 
     protected ?int $count = null;
 
+    protected ?string $note = null;
+
     public function setAgent($agentable): static
     {
         $this->agentable = $agentable;
@@ -63,6 +65,13 @@ class AppointmentBuilder
         return $this;
     }
 
+    public function note(?string $note): static
+    {
+        $this->note = $note;
+
+        return $this;
+    }
+
     protected function createAppointment(array $data): Appointment
     {
         return Appointment::query()->create($data);
@@ -80,6 +89,7 @@ class AppointmentBuilder
             'end_time' => $this->endTime,
             'count' => $this->count,
             'duration' => $this->duration,
+            'note' => $this->note,
         ];
 
         $validationRules = [
@@ -113,6 +123,7 @@ class AppointmentBuilder
             'end_time' => ['nullable', 'required_without:duration,count', 'date_format:Y-m-d H:i', 'after:start_time'],
             'count' => ['nullable', 'integer', 'min:1', 'required_with:duration'],
             'duration' => ['nullable', 'integer', 'min:1', 'required_with:count'],
+            'note' => ['nullable', 'string'],
         ];
 
         // Add optional client validation if client is set
@@ -188,6 +199,7 @@ class AppointmentBuilder
             'agentable_type' => get_class($this->agentable),
             'start_time' => $startTime,
             'end_time' => $endTime,
+            'note' => $this->note,
         ];
 
         // Add client data only if clientable is set

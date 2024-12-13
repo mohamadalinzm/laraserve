@@ -9,10 +9,6 @@ class ExpiredAppointmentException extends Exception
 {
     /**
      * Create a new ExpiredAppointmentException instance.
-     *
-     * @param string $message
-     * @param int $code
-     * @param Throwable|null $previous
      */
     public function __construct(
         string $message = 'Appointments in the past cannot be booked or cancelled.',

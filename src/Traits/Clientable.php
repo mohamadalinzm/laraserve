@@ -30,15 +30,14 @@ trait Clientable
             ->get();
     }
 
-
     public function bookAppointment(Appointment $appointment): Appointment
     {
         if ($appointment->start_time < now()) {
-            throw new ExpiredAppointmentException();
+            throw new ExpiredAppointmentException;
         }
 
         if ($appointment->clientable_id !== null) {
-            throw new AppointmentAlreadyBookedException();
+            throw new AppointmentAlreadyBookedException;
         }
 
         return tap($appointment)->update([
@@ -50,11 +49,11 @@ trait Clientable
     public function cancelAppointment(Appointment $appointment)
     {
         if ($appointment->start_time < now()) {
-            throw new ExpiredAppointmentException();
+            throw new ExpiredAppointmentException;
         }
 
         if ($appointment->clientable_id !== $this->id) {
-            throw new UnauthorizedAppointmentCancellationException();
+            throw new UnauthorizedAppointmentCancellationException;
         }
 
         return tap($appointment)->update([

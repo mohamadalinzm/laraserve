@@ -9,10 +9,6 @@ class AppointmentAlreadyBookedException extends Exception
 {
     /**
      * Create a new AppointmentAlreadyBookedException instance.
-     *
-     * @param string $message
-     * @param int $code
-     * @param Throwable|null $previous
      */
     public function __construct(
         string $message = 'Appointment is already booked by another client.',

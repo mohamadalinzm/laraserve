@@ -58,7 +58,7 @@ class ClientTest extends TestCase
         //Arrange
         $data = [
             'start_time' => now()->subDays(2),
-            'end_time' => now()->subDays(2)->addHour()
+            'end_time' => now()->subDays(2)->addHour(),
         ];
         //Act
         $appointment = $this->agent->agentAppointments()->create($data);
@@ -97,21 +97,21 @@ class ClientTest extends TestCase
         $this->assertInstanceOf(Appointment::class, $appointment2);
         $this->assertInstanceOf(Appointment::class, $appointment3);
         $this->assertDatabaseHas('appointments', $data);
-        $this->assertDatabaseHas('appointments',[
+        $this->assertDatabaseHas('appointments', [
             'start_time' => $appointment2->start_time,
             'end_time' => $appointment2->end_time,
             'clientable_id' => $this->client->id,
             'clientable_type' => get_class($this->client),
             'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent)
+            'agentable_type' => get_class($this->agent),
         ]);
-        $this->assertDatabaseHas('appointments',[
+        $this->assertDatabaseHas('appointments', [
             'start_time' => $appointment3->start_time,
             'end_time' => $appointment3->end_time,
             'clientable_id' => $this->client->id,
             'clientable_type' => get_class($this->client),
             'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent)
+            'agentable_type' => get_class($this->agent),
         ]);
         $this->assertCount(3, $this->client->clientAppointments);
     }
@@ -151,7 +151,7 @@ class ClientTest extends TestCase
             'clientable_id' => $this->client->id,
             'clientable_type' => get_class($this->client),
             'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent)
+            'agentable_type' => get_class($this->agent),
         ]);
         $this->assertDatabaseHas('appointments', [
             'start_time' => $newAppointment->start_time,
@@ -159,7 +159,7 @@ class ClientTest extends TestCase
             'clientable_id' => $newClient->id,
             'clientable_type' => get_class($newClient),
             'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent)
+            'agentable_type' => get_class($this->agent),
         ]);
         $this->assertCount(2, $this->client->getBookedSlots());
     }
@@ -199,7 +199,7 @@ class ClientTest extends TestCase
             'clientable_id' => $this->client->id,
             'clientable_type' => get_class($this->client),
             'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent)
+            'agentable_type' => get_class($this->agent),
         ]);
         $this->assertDatabaseHas('appointments', [
             'start_time' => $newAppointment->start_time,
@@ -207,7 +207,7 @@ class ClientTest extends TestCase
             'clientable_id' => $newClient->id,
             'clientable_type' => get_class($newClient),
             'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent)
+            'agentable_type' => get_class($this->agent),
         ]);
         $this->assertCount(1, $this->client->getUpComingBookedSlots());
     }
@@ -242,7 +242,7 @@ class ClientTest extends TestCase
             'clientable_id' => null,
             'clientable_type' => null,
             'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent)
+            'agentable_type' => get_class($this->agent),
         ]);
     }
 
@@ -295,7 +295,7 @@ class ClientTest extends TestCase
             'start_time' => now()->subDays(2),
             'end_time' => now()->subDays(2)->addHour(),
             'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent)
+            'agentable_type' => get_class($this->agent),
         ];
         $appointment = $this->client->clientAppointments()->create($data);
         //Act

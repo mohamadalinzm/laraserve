@@ -9,10 +9,6 @@ class UnauthorizedAppointmentCancellationException extends Exception
 {
     /**
      * Create a new UnauthorizedAppointmentCancellationException instance.
-     *
-     * @param string $message
-     * @param int $code
-     * @param Throwable|null $previous
      */
     public function __construct(
         string $message = 'You are not authorized to cancel this appointment.',
