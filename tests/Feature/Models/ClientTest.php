@@ -4,6 +4,7 @@ namespace Nzm\Appointment\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Nzm\Appointment\Exceptions\AppointmentAlreadyBookedException;
+use Nzm\Appointment\Exceptions\ExpiredAppointmentException;
 use Nzm\Appointment\Exceptions\UnauthorizedAppointmentCancellationException;
 use Nzm\Appointment\Models\Appointment;
 use Nzm\Appointment\Tests\TestModels\Client;
@@ -46,6 +47,28 @@ class ClientTest extends TestCase
         } catch (AppointmentAlreadyBookedException $e) {
             //Assert
             $this->assertEquals('Appointment is already booked by another client.', $e->getMessage());
+
+            throw $e;
+        }
+    }
+
+    public function test_book_appointment_that_in_the_past()
+    {
+        $this->expectException(ExpiredAppointmentException::class);
+        //Arrange
+        $data = [
+            'start_time' => now()->subDays(2),
+            'end_time' => now()->subDays(2)->addHour()
+        ];
+        //Act
+        $appointment = $this->agent->agentAppointments()->create($data);
+        try {
+
+            $this->client->bookAppointment($appointment);
+
+        } catch (ExpiredAppointmentException $e) {
+            //Assert
+            $this->assertEquals('Appointments in the past cannot be booked or cancelled.', $e->getMessage());
 
             throw $e;
         }
@@ -259,6 +282,28 @@ class ClientTest extends TestCase
         } catch (UnauthorizedAppointmentCancellationException $e) {
             //Assert
             $this->assertEquals('You are not authorized to cancel this appointment.', $e->getMessage());
+
+            throw $e;
+        }
+    }
+
+    public function test_client_cancel_appointment_that_in_the_past()
+    {
+        $this->expectException(ExpiredAppointmentException::class);
+        //Arrange
+        $data = [
+            'start_time' => now()->subDays(2),
+            'end_time' => now()->subDays(2)->addHour(),
+            'agentable_id' => $this->agent->id,
+            'agentable_type' => get_class($this->agent)
+        ];
+        $appointment = $this->client->clientAppointments()->create($data);
+        //Act
+        try {
+            $this->client->cancelAppointment($appointment);
+        } catch (ExpiredAppointmentException $e) {
+            //Assert
+            $this->assertEquals('Appointments in the past cannot be booked or cancelled.', $e->getMessage());
 
             throw $e;
         }
