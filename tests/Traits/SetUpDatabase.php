@@ -6,12 +6,15 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Nzm\Appointment\Tests\TestModels\Agent;
 use Nzm\Appointment\Tests\TestModels\Client;
+use Nzm\Appointment\Tests\TestModels\User;
 
 trait SetUpDatabase
 {
     protected $agent;
+    protected $userAgent;
 
     protected $client;
+    protected $userClient;
 
     protected $faker;
 
@@ -22,7 +25,9 @@ trait SetUpDatabase
 
         $this->faker = \Faker\Factory::create();
         $this->agent = Agent::query()->create(['name' => $this->faker->name]);
+        $this->userAgent = User::query()->create(['name' => $this->faker->name,'role' => 'agent']);
         $this->client = Client::query()->create(['name' => $this->faker->name]);
+        $this->userClient = User::query()->create(['name' => $this->faker->name,'role' => 'client']);
     }
 
     protected function getEnvironmentSetUp($app): void
@@ -49,6 +54,13 @@ trait SetUpDatabase
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->timestamps();
+        });
+
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->enum('role', ['agent', 'client']);
             $table->timestamps();
         });
     }
