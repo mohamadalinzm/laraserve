@@ -68,7 +68,7 @@ class AgentTest extends TestCase
 
         $this->agent->agentAppointments()->create($data);
         //Act
-        $bookedSlots = $this->agent->getBookedSlots();
+        $bookedSlots = $this->agent->getAgentBookedSlots();
         //Assert
         $this->assertCount(1, $bookedSlots);
     }
@@ -83,7 +83,7 @@ class AgentTest extends TestCase
 
         $this->agent->agentAppointments()->create($data);
         //Act
-        $upcomingBookedSlots = $this->agent->getUpComingBookedSlots();
+        $upcomingBookedSlots = $this->agent->getAgentUpcomingBookedSlots();
         //Assert
         $this->assertCount(1, $upcomingBookedSlots);
     }
@@ -92,15 +92,18 @@ class AgentTest extends TestCase
     {
         //Arrange
         $start_time = now()->addDay();
-
-        AppointmentFacade::setAgent($this->agent)
-            ->startTime($start_time->format('Y-m-d H:i'))
-            ->count(5)
-            ->duration(30)
-            ->save();
+        $count = 5;
+        $duration = 30;
         //Act
+        $data = AppointmentFacade::setAgent($this->agent)
+            ->startTime($start_time->format('Y-m-d H:i'))
+            ->count($count)
+            ->duration($duration)
+            ->note('Test')
+            ->save();
         $slots = $this->agent->getSlotsByDate($start_time->toDateString());
         //Assert
-        $this->assertCount(5, $slots);
+        $this->assertCount($count, $data);
+        $this->assertCount($count, $slots);
     }
 }

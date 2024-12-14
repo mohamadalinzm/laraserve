@@ -161,7 +161,7 @@ class ClientTest extends TestCase
             'agentable_id' => $this->agent->id,
             'agentable_type' => get_class($this->agent),
         ]);
-        $this->assertCount(2, $this->client->getBookedSlots());
+        $this->assertCount(2, $this->client->getClientBookedSlots());
     }
 
     public function test_client_see_only_upcoming_booked_appointments()
@@ -209,7 +209,7 @@ class ClientTest extends TestCase
             'agentable_id' => $this->agent->id,
             'agentable_type' => get_class($this->agent),
         ]);
-        $this->assertCount(1, $this->client->getUpComingBookedSlots());
+        $this->assertCount(1, $this->client->getClientUpcomingBookedSlots());
     }
 
     public function test_client_create_appointment()
