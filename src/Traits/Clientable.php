@@ -16,14 +16,14 @@ trait Clientable
         return $this->morphMany(Appointment::class, 'clientable');
     }
 
-    public function getBookedSlots(): Collection
+    public function getClientBookedSlots(): Collection
     {
         return $this->clientAppointments()
             ->where('start_time', '>', now())
             ->get();
     }
 
-    public function getUpComingBookedSlots(): Collection
+    public function getClientUpcomingBookedSlots(): Collection
     {
         return $this->clientAppointments()
             ->where('start_time', '>', now())

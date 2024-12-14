@@ -21,14 +21,14 @@ trait Agentable
             ->get();
     }
 
-    public function getBookedSlots(): Collection
+    public function getAgentBookedSlots(): Collection
     {
         return $this->agentAppointments()
             ->whereNotNull('clientable_id')
             ->get();
     }
 
-    public function getUpComingBookedSlots(): Collection
+    public function getAgentUpcomingBookedSlots(): Collection
     {
         return $this->agentAppointments()
             ->whereNotNull('clientable_id')
