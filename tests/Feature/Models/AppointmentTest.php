@@ -118,8 +118,8 @@ class AppointmentTest extends TestCase
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
 
-            $this->assertTrue($errors->has('end_time'), 'Validation error for end_time is missing');
-            $this->assertTrue($errors->has('duration'), 'Validation error for duration is missing');
+            $this->assertTrue($errors->has('end_time'), 'The end time field is required when duration / count is not present.');
+            $this->assertTrue($errors->has('duration'), 'The duration field is required.');
 
             throw $e;
         }
@@ -140,8 +140,8 @@ class AppointmentTest extends TestCase
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
 
-            $this->assertTrue($errors->has('end_time'), 'Validation error for end_time is missing');
-            $this->assertTrue($errors->has('count'), 'Validation error for count is missing');
+            $this->assertTrue($errors->has('end_time'), 'The end time field is required when duration / count is not present.');
+            $this->assertTrue($errors->has('count'), 'The count field is required.');
 
             throw $e;
         }
@@ -161,7 +161,7 @@ class AppointmentTest extends TestCase
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
 
-            $this->assertTrue($errors->has('end_time'), 'Validation error for end_time is missing');
+            $this->assertTrue($errors->has('end_time'), 'The end time field is required when duration / count is not present.');
 
             throw $e;
         }
@@ -180,7 +180,35 @@ class AppointmentTest extends TestCase
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
 
-            $this->assertTrue($errors->has('start_time'), 'Validation error for start_time is missing');
+            $this->assertTrue($errors->has('start_time'), 'The start time field is required.');
+
+            throw $e;
+        }
+    }
+
+    //add test for overlap validation
+    public function test_validation_on_add_appointment_with_overlap_via_facade()
+    {
+        $this->expectException(ValidationException::class);
+
+        try {
+
+            $data = $this->generateAppointment();
+            $data['start_time'] = now()->format('Y-m-d H:i');
+            $data['end_time'] = now()->addMinutes(30)->format('Y-m-d H:i');
+
+            $this->agent->agentAppointments()->create($data);
+
+            AppointmentFacade::setAgent($this->agent)
+                ->setClient($this->client)
+                ->startTime(now()->addMinutes(10)->format('Y-m-d H:i'))
+                ->endTime(now()->addMinutes(40)->format('Y-m-d H:i'))
+                ->save();
+
+        } catch (ValidationException $e) {
+            $errors = $e->validator->errors();
+
+            $this->assertTrue($errors->has('start_time'), 'This appointment conflicts with an existing appointment time.');
 
             throw $e;
         }

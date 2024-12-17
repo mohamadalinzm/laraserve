@@ -100,6 +100,7 @@ class AppointmentBuilder
                 'date_format:Y-m-d H:i',
                 'before:end_time',
                 function ($attribute, $value, $fail) {
+                    // Existing duplicate check
                     if (! config('appointment.duplicate', false)) {
                         $query = Appointment::query()
                             ->where('agentable_id', $this->agentable->id)
@@ -117,6 +118,30 @@ class AppointmentBuilder
                         if ($exists) {
                             $fail('An appointment at this time already exists.');
                         }
+                    }
+
+                    // New overlap validation
+                    $overlapQuery = Appointment::query()
+                        ->where('agentable_id', $this->agentable->id)
+                        ->where('agentable_type', get_class($this->agentable))
+                        ->where(function ($query) use ($value) {
+                            // Check if new appointment's start time is within an existing appointment's time range
+                            $query->where(function ($subQuery) use ($value) {
+                                $subQuery->where('start_time', '<=', $value)
+                                    ->where('end_time', '>', $value);
+                            });
+                        });
+
+                    // Only check for existing appointment if a client is set
+                    if ($this->clientable) {
+                        $overlapQuery->where('clientable_id', $this->clientable->id)
+                            ->where('clientable_type', get_class($this->clientable));
+                    }
+
+                    $hasOverlap = $overlapQuery->exists();
+
+                    if ($hasOverlap) {
+                        $fail('This appointment conflicts with an existing appointment time.');
                     }
                 },
             ],
