@@ -42,4 +42,11 @@ trait Agentable
             ->whereDate('start_time', $date)
             ->get();
     }
+
+    public function findSlotByDate($date): Appointment
+    {
+        return $this->agentAppointments()
+            ->where('start_time', $date)
+            ->firstOrFail();
+    }
 }
