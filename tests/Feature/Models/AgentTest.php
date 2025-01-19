@@ -106,4 +106,23 @@ class AgentTest extends TestCase
         $this->assertCount($count, $data);
         $this->assertCount($count, $slots);
     }
+
+    public function test_find_slot_by_date()
+    {
+        //Arrange
+        $start_time = now()->addDay();
+        $count = 5;
+        $duration = 30;
+        //Act
+        AppointmentFacade::setAgent($this->agent)
+            ->startTime($start_time->format('Y-m-d H:i'))
+            ->count($count)
+            ->duration($duration)
+            ->note('Test')
+            ->save();
+        $slot = $this->agent->findSlotByDate($start_time->format('Y-m-d H:i'));
+        //Assert
+        $this->assertInstanceOf(Appointment::class, $slot);
+        $this->assertEquals($start_time->format('Y-m-d H:i'), $slot->start_time);
+    }
 }
