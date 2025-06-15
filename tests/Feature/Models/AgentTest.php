@@ -1,32 +1,32 @@
 <?php
 
-namespace Nzm\Appointment\Tests\Feature\Models;
+namespace Nazemi\Laraserve\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Nzm\Appointment\Facades\AppointmentFacade;
-use Nzm\Appointment\Models\Appointment;
-use Nzm\Appointment\Tests\Traits\SetUpDatabase;
+use Nazemi\Laraserve\Facades\ReservationFacade;
+use Nazemi\Laraserve\Models\Reservation;
+use Nazemi\Laraserve\Tests\Traits\SetUpDatabase;
 use Orchestra\Testbench\TestCase;
 
 class AgentTest extends TestCase
 {
     use RefreshDatabase,SetUpDatabase;
 
-    public function test_create_appointment_through_agent()
+    public function test_create_reservation_through_agent()
     {
         //Arrange
-        $data = $this->generateAppointment();
+        $data = $this->generateReservation();
         //Act
-        $appointment = $this->agent->agentAppointments()->create($data);
+        $reservation = $this->agent->agentReservations()->create($data);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', $data);
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', $data);
     }
 
-    public function test_appointment_without_client()
+    public function test_reservation_without_client()
     {
         //Arrange
-        $data = $this->generateAppointment();
+        $data = $this->generateReservation();
 
         unset($data['agentable_id']);
         unset($data['agentable_type']);
@@ -34,24 +34,24 @@ class AgentTest extends TestCase
         unset($data['clientable_type']);
 
         //Act
-        $appointment = $this->agent->agentAppointments()->create($data);
+        $reservation = $this->agent->agentReservations()->create($data);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', $data);
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', $data);
 
     }
 
     public function test_get_available_slots()
     {
         //Arrange
-        $data = $this->generateAppointment();
+        $data = $this->generateReservation();
 
         unset($data['agentable_id']);
         unset($data['agentable_type']);
         unset($data['clientable_id']);
         unset($data['clientable_type']);
 
-        $this->agent->agentAppointments()->create($data);
+        $this->agent->agentReservations()->create($data);
         //Act
         $availableSlots = $this->agent->getAvailableSlots();
         //Assert
@@ -61,12 +61,12 @@ class AgentTest extends TestCase
     public function test_get_booked_slots()
     {
         //Arrange
-        $data = $this->generateAppointment();
+        $data = $this->generateReservation();
 
         unset($data['agentable_id']);
         unset($data['agentable_type']);
 
-        $this->agent->agentAppointments()->create($data);
+        $this->agent->agentReservations()->create($data);
         //Act
         $bookedSlots = $this->agent->getAgentBookedSlots();
         //Assert
@@ -76,12 +76,12 @@ class AgentTest extends TestCase
     public function test_get_upcoming_booked_slots()
     {
         //Arrange
-        $data = $this->generateAppointment();
+        $data = $this->generateReservation();
 
         unset($data['agentable_id']);
         unset($data['agentable_type']);
 
-        $this->agent->agentAppointments()->create($data);
+        $this->agent->agentReservations()->create($data);
         //Act
         $upcomingBookedSlots = $this->agent->getAgentUpcomingBookedSlots();
         //Assert
@@ -95,7 +95,7 @@ class AgentTest extends TestCase
         $count = 5;
         $duration = 30;
         //Act
-        $data = AppointmentFacade::setAgent($this->agent)
+        $data = ReservationFacade::setAgent($this->agent)
             ->startTime($start_time->format('Y-m-d H:i'))
             ->count($count)
             ->duration($duration)
@@ -114,7 +114,7 @@ class AgentTest extends TestCase
         $count = 5;
         $duration = 30;
         //Act
-        AppointmentFacade::setAgent($this->agent)
+        ReservationFacade::setAgent($this->agent)
             ->startTime($start_time->format('Y-m-d H:i'))
             ->count($count)
             ->duration($duration)
@@ -122,7 +122,7 @@ class AgentTest extends TestCase
             ->save();
         $slot = $this->agent->findSlotByDate($start_time->format('Y-m-d H:i'));
         //Assert
-        $this->assertInstanceOf(Appointment::class, $slot);
+        $this->assertInstanceOf(Reservation::class, $slot);
         $this->assertEquals($start_time->format('Y-m-d H:i'), $slot->start_time);
     }
 }

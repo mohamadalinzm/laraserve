@@ -1,12 +1,12 @@
 <?php
 
-namespace Nzm\Appointment\Models;
+namespace Nazemi\Laraserve\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class Appointment extends Model
+class Reservation extends Model
 {
     use HasFactory;
 

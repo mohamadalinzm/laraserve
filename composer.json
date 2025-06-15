@@ -1,10 +1,12 @@
 {
-    "name": "nazemi/laravel-appointment",
-    "description": "Create a basic appointment system for any model",
+    "name": "nazemi/laraserve",
+    "description": "Create a basic reservation system for Laravel applications.",
     "type": "library",
     "keywords": [
         "php",
         "laravel",
+        "reservation",
+        "booking",
         "appointment"
     ],
     "authors": [
@@ -24,12 +26,12 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Nzm\\Appointment\\": "src"
+            "Nazemi\\Laraserve\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Nzm\\Appointment\\Tests\\": "tests"
+            "Nazemi\\Laraserve\\Tests\\": "tests"
         }
     },
     "minimum-stability": "dev",
@@ -40,7 +42,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Nzm\\Appointment\\AppointmentServiceProvider"
+                "Nazemi\\Laraserve\\LaraserveServiceProvider"
             ]
         }
     }

@@ -1,21 +1,21 @@
 <?php
 
-namespace Nzm\Appointment\Traits;
+namespace Nazemi\Laraserve\Traits;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Nzm\Appointment\Models\Appointment;
+use Nazemi\Laraserve\Models\Reservation;
 
 trait Agentable
 {
-    public function agentAppointments(): MorphMany
+    public function agentReservations(): MorphMany
     {
-        return $this->morphMany(Appointment::class, 'agentable');
+        return $this->morphMany(Reservation::class, 'agentable');
     }
 
     public function getAvailableSlots(): Collection
     {
-        return $this->agentAppointments()
+        return $this->agentReservations()
             ->whereNull('clientable_id')
             ->where('start_time', '>', now())
             ->get();
@@ -23,14 +23,14 @@ trait Agentable
 
     public function getAgentBookedSlots(): Collection
     {
-        return $this->agentAppointments()
+        return $this->agentReservations()
             ->whereNotNull('clientable_id')
             ->get();
     }
 
     public function getAgentUpcomingBookedSlots(): Collection
     {
-        return $this->agentAppointments()
+        return $this->agentReservations()
             ->whereNotNull('clientable_id')
             ->where('start_time', '>', now())
             ->get();
@@ -38,14 +38,14 @@ trait Agentable
 
     public function getSlotsByDate($date): Collection
     {
-        return $this->agentAppointments()
+        return $this->agentReservations()
             ->whereDate('start_time', $date)
             ->get();
     }
 
-    public function findSlotByDate($date): Appointment
+    public function findSlotByDate($date): Reservation
     {
-        return $this->agentAppointments()
+        return $this->agentReservations()
             ->where('start_time', $date)
             ->firstOrFail();
     }

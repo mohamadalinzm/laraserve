@@ -1,13 +1,13 @@
 <?php
 
-namespace Nzm\Appointment\Builder;
+namespace Nazemi\Laraserve\Builder;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Nzm\Appointment\Models\Appointment;
+use Nazemi\Laraserve\Models\Reservation;
 
-class AppointmentBuilder
+class ReservationBuilder
 {
     protected $agentable;
 
@@ -72,9 +72,9 @@ class AppointmentBuilder
         return $this;
     }
 
-    protected function createAppointment(array $data): Appointment
+    protected function createReservation(array $data): Reservation
     {
-        return Appointment::query()->create($data);
+        return Reservation::query()->create($data);
     }
 
     /**
@@ -101,13 +101,13 @@ class AppointmentBuilder
                 'before:end_time',
                 function ($attribute, $value, $fail) {
                     // Existing duplicate check
-                    if (! config('appointment.duplicate', false)) {
-                        $query = Appointment::query()
+                    if (! config('laraserve.duplicate', false)) {
+                        $query = Reservation::query()
                             ->where('agentable_id', $this->agentable->id)
                             ->where('agentable_type', get_class($this->agentable))
                             ->where('start_time', $value);
 
-                        // Only check for existing appointment if a client is set
+                        // Only check for existing reservation if a client is set
                         if ($this->clientable) {
                             $query->where('clientable_id', $this->clientable->id)
                                 ->where('clientable_type', get_class($this->clientable));
@@ -116,23 +116,23 @@ class AppointmentBuilder
                         $exists = $query->exists();
 
                         if ($exists) {
-                            $fail('An appointment at this time already exists.');
+                            $fail('A reservation at this time already exists.');
                         }
                     }
 
                     // New overlap validation
-                    $overlapQuery = Appointment::query()
+                    $overlapQuery = Reservation::query()
                         ->where('agentable_id', $this->agentable->id)
                         ->where('agentable_type', get_class($this->agentable))
                         ->where(function ($query) use ($value) {
-                            // Check if new appointment's start time is within an existing appointment's time range
+                            // Check if new reservation's start time is within an existing reservation's time range
                             $query->where(function ($subQuery) use ($value) {
                                 $subQuery->where('start_time', '<=', $value)
                                     ->where('end_time', '>', $value);
                             });
                         });
 
-                    // Only check for existing appointment if a client is set
+                    // Only check for existing reservation if a client is set
                     if ($this->clientable) {
                         $overlapQuery->where('clientable_id', $this->clientable->id)
                             ->where('clientable_type', get_class($this->clientable));
@@ -141,7 +141,7 @@ class AppointmentBuilder
                     $hasOverlap = $overlapQuery->exists();
 
                     if ($hasOverlap) {
-                        $fail('This appointment conflicts with an existing appointment time.');
+                        $fail('This reservation conflicts with an existing reservation time.');
                     }
                 },
             ],
@@ -170,24 +170,24 @@ class AppointmentBuilder
     /**
      * @throws ValidationException
      */
-    public function save(): array|Appointment
+    public function save(): array|Reservation
     {
         $this->validate();
 
-        // If duration and count are set, create multiple appointments
+        // If duration and count are set, create multiple reservations
         if ($this->duration && $this->count) {
-            return $this->createMultipleAppointments();
+            return $this->createMultipleReservations();
         }
 
-        // Otherwise, create a single appointment
-        return $this->createSingleAppointment();
+        // Otherwise, create a single reservation
+        return $this->createSingleReservation();
     }
 
-    private function createMultipleAppointments(): array
+    private function createMultipleReservations(): array
     {
-        $appointments = [];
+        $reservations = [];
 
-        return DB::transaction(function () use (&$appointments) {
+        return DB::transaction(function () use (&$reservations) {
             $currentStartTime = $this->startTime;
 
             for ($i = 0; $i < $this->count; $i++) {
@@ -196,30 +196,30 @@ class AppointmentBuilder
                     ->addMinutes($this->duration)
                     ->format('Y-m-d H:i');
 
-                $appointments[] = $this->createAppointment(
-                    $this->prepareAppointmentData($currentStartTime, $endTime)
+                $reservations[] = $this->createReservation(
+                    $this->prepareReservationData($currentStartTime, $endTime)
                 );
 
                 // Update current start time for next iteration
                 $currentStartTime = $endTime;
             }
 
-            return $appointments;
+            return $reservations;
         });
     }
 
-    private function createSingleAppointment(): Appointment
+    private function createSingleReservation(): Reservation
     {
         return DB::transaction(function () {
-            return $this->createAppointment(
-                $this->prepareAppointmentData($this->startTime, $this->endTime)
+            return $this->createReservation(
+                $this->prepareReservationData($this->startTime, $this->endTime)
             );
         });
     }
 
-    private function prepareAppointmentData(string $startTime, string $endTime): array
+    private function prepareReservationData(string $startTime, string $endTime): array
     {
-        $appointmentData = [
+        $reservationData = [
             'agentable_id' => $this->agentable->id,
             'agentable_type' => get_class($this->agentable),
             'start_time' => $startTime,
@@ -229,10 +229,10 @@ class AppointmentBuilder
 
         // Add client data only if clientable is set
         if ($this->clientable) {
-            $appointmentData['clientable_id'] = $this->clientable->id;
-            $appointmentData['clientable_type'] = get_class($this->clientable);
+            $reservationData['clientable_id'] = $this->clientable->id;
+            $reservationData['clientable_type'] = get_class($this->clientable);
         }
 
-        return $appointmentData;
+        return $reservationData;
     }
 }

@@ -1,10 +1,10 @@
 <?php
 
-namespace Nzm\Appointment\Tests\TestModels;
+namespace Nazemi\Laraserve\Tests\TestModels;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Nzm\Appointment\Traits\Clientable;
+use Nazemi\Laraserve\Traits\Clientable;
 
 class Client extends Model
 {

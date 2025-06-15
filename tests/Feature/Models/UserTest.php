@@ -3,21 +3,21 @@
 namespace Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Nzm\Appointment\Exceptions\AppointmentAlreadyBookedException;
-use Nzm\Appointment\Exceptions\ExpiredAppointmentException;
-use Nzm\Appointment\Exceptions\UnauthorizedAppointmentCancellationException;
-use Nzm\Appointment\Facades\AppointmentFacade;
-use Nzm\Appointment\Models\Appointment;
-use Nzm\Appointment\Tests\TestModels\Client;
-use Nzm\Appointment\Tests\TestModels\User;
-use Nzm\Appointment\Tests\Traits\SetUpDatabase;
+use Nazemi\Laraserve\Exceptions\ReservationAlreadyBookedException;
+use Nazemi\Laraserve\Exceptions\ExpiredReservationException;
+use Nazemi\Laraserve\Exceptions\UnauthorizedReservationCancellationException;
+use Nazemi\Laraserve\Facades\ReservationFacade;
+use Nazemi\Laraserve\Models\Reservation;
+use Nazemi\Laraserve\Tests\TestModels\Client;
+use Nazemi\Laraserve\Tests\TestModels\User;
+use Nazemi\Laraserve\Tests\Traits\SetUpDatabase;
 use Orchestra\Testbench\TestCase;
 
 class UserTest extends TestCase
 {
     use RefreshDatabase,SetUpDatabase;
 
-    public function test_client_user_book_appointment()
+    public function test_client_user_book_reservation()
     {
         //Arrange
         $data = [
@@ -27,18 +27,18 @@ class UserTest extends TestCase
             'agentable_type' => get_class($this->userAgent)
         ];
         //Act
-        $appointment = $this->userAgent->agentAppointments()->create($data);
-        $this->userClient->bookAppointment($appointment);
+        $reservation = $this->userAgent->agentReservations()->create($data);
+        $this->userClient->bookReservation($reservation);
         $data['clientable_id'] = $this->userClient->id;
         $data['clientable_type'] = get_class($this->userClient);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', $data);
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', $data);
     }
 
-    public function test_client_user_book_appointment_that_already_booked()
+    public function test_client_user_book_reservation_that_already_booked()
     {
-        $this->expectException(AppointmentAlreadyBookedException::class);
+        $this->expectException(ReservationAlreadyBookedException::class);
         //Arrange
         $data = [
             'start_time' => now()->addDays(2),
@@ -47,42 +47,42 @@ class UserTest extends TestCase
             'clientable_type' => get_class($this->userClient)
         ];
         //Act
-        $appointment = $this->userAgent->agentAppointments()->create($data);
+        $reservation = $this->userAgent->agentReservations()->create($data);
         try {
 
-            $this->client->bookAppointment($appointment);
+            $this->client->bookReservation($reservation);
 
-        } catch (AppointmentAlreadyBookedException $e) {
+        } catch (ReservationAlreadyBookedException $e) {
             //Assert
-            $this->assertEquals('Appointment is already booked by another client.', $e->getMessage());
+            $this->assertEquals('Reservation is already booked by another client.', $e->getMessage());
 
             throw $e;
         }
     }
 
-    public function test_client_user_book_appointment_that_in_the_past()
+    public function test_client_user_book_reservation_that_in_the_past()
     {
-        $this->expectException(ExpiredAppointmentException::class);
+        $this->expectException(ExpiredReservationException::class);
         //Arrange
         $data = [
             'start_time' => now()->subDays(2),
             'end_time' => now()->subDays(2)->addHour(),
         ];
         //Act
-        $appointment = $this->userAgent->agentAppointments()->create($data);
+        $reservation = $this->userAgent->agentReservations()->create($data);
         try {
 
-            $this->userClient->bookAppointment($appointment);
+            $this->userClient->bookReservation($reservation);
 
-        } catch (ExpiredAppointmentException $e) {
+        } catch (ExpiredReservationException $e) {
             //Assert
-            $this->assertEquals('Appointments in the past cannot be booked or cancelled.', $e->getMessage());
+            $this->assertEquals('Reservations in the past cannot be booked or cancelled.', $e->getMessage());
 
             throw $e;
         }
     }
 
-    public function test_get_appointments_of_client_user()
+    public function test_get_reservations_of_client_user()
     {
         //Arrange
         $data = [
@@ -92,14 +92,14 @@ class UserTest extends TestCase
             'clientable_type' => get_class($this->userClient)
         ];
         //Act
-        $appointment = $this->userAgent->agentAppointments()->create($data);
-        $appointment2 = $this->agent->agentAppointments()->create([
+        $reservation = $this->userAgent->agentReservations()->create($data);
+        $reservation2 = $this->agent->agentReservations()->create([
             'start_time' => now()->addDays(2),
             'end_time' => now()->addDays(2)->addHour(),
             'clientable_id' => $this->userClient->id,
             'clientable_type' => get_class($this->userClient),
         ]);
-        $appointment3 = $this->userAgent->agentAppointments()->create([
+        $reservation3 = $this->userAgent->agentReservations()->create([
             'start_time' => now()->subDays(2),
             'end_time' => now()->subDays(2)->addHour(),
             'clientable_id' => $this->userClient->id,
@@ -108,30 +108,30 @@ class UserTest extends TestCase
         $data['agentable_id'] = $this->userAgent->id;
         $data['agentable_type'] = get_class($this->userAgent);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertInstanceOf(Appointment::class, $appointment2);
-        $this->assertInstanceOf(Appointment::class, $appointment3);
-        $this->assertDatabaseHas('appointments', $data);
-        $this->assertDatabaseHas('appointments', [
-            'start_time' => $appointment2->start_time,
-            'end_time' => $appointment2->end_time,
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertInstanceOf(Reservation::class, $reservation2);
+        $this->assertInstanceOf(Reservation::class, $reservation3);
+        $this->assertDatabaseHas('reservations', $data);
+        $this->assertDatabaseHas('reservations', [
+            'start_time' => $reservation2->start_time,
+            'end_time' => $reservation2->end_time,
             'clientable_id' => $this->userClient->id,
             'clientable_type' => get_class($this->userClient),
             'agentable_id' => $this->agent->id,
             'agentable_type' => get_class($this->agent),
         ]);
-        $this->assertDatabaseHas('appointments', [
-            'start_time' => $appointment3->start_time,
-            'end_time' => $appointment3->end_time,
+        $this->assertDatabaseHas('reservations', [
+            'start_time' => $reservation3->start_time,
+            'end_time' => $reservation3->end_time,
             'clientable_id' => $this->userClient->id,
             'clientable_type' => get_class($this->userClient),
             'agentable_id' => $this->userAgent->id,
             'agentable_type' => get_class($this->userAgent),
         ]);
-        $this->assertCount(3, $this->userClient->clientAppointments);
+        $this->assertCount(3, $this->userClient->clientReservations);
     }
 
-    public function test_client_user_see_only_booked_appointments()
+    public function test_client_user_see_only_booked_reservations()
     {
         //Arrange
         $newClient = User::query()->create(['name' => 'new user client','role' => 'client']);
@@ -140,38 +140,38 @@ class UserTest extends TestCase
             'end_time' => now()->addDays(4)->addHour()
         ];
         //Act
-        $appointment = $this->userAgent->agentAppointments()->create($data);
-        $appointment2 = $this->userAgent->agentAppointments()->create([
+        $reservation = $this->userAgent->agentReservations()->create($data);
+        $reservation2 = $this->userAgent->agentReservations()->create([
             'start_time' => now()->addDays(2),
             'end_time' => now()->addDays(2)->addHour(),
             'clientable_id' => $this->userClient->id,
             'clientable_type' => get_class($this->userClient),
         ]);
-        $newAppointment = $this->userAgent->agentAppointments()->create([
+        $newReservation = $this->userAgent->agentReservations()->create([
             'start_time' => now()->addDays(3),
             'end_time' => now()->addDays(3)->addHour(),
             'clientable_id' => $newClient->id,
             'clientable_type' => get_class($newClient),
         ]);
-        $this->userClient->bookAppointment($appointment);
+        $this->userClient->bookReservation($reservation);
         $data['clientable_id'] = $this->userClient->id;
         $data['clientable_type'] = get_class($this->userClient);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertInstanceOf(Appointment::class, $appointment2);
-        $this->assertInstanceOf(Appointment::class, $newAppointment);
-        $this->assertDatabaseHas('appointments', $data);
-        $this->assertDatabaseHas('appointments', [
-            'start_time' => $appointment2->start_time,
-            'end_time' => $appointment2->end_time,
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertInstanceOf(Reservation::class, $reservation2);
+        $this->assertInstanceOf(Reservation::class, $newReservation);
+        $this->assertDatabaseHas('reservations', $data);
+        $this->assertDatabaseHas('reservations', [
+            'start_time' => $reservation2->start_time,
+            'end_time' => $reservation2->end_time,
             'clientable_id' => $this->userClient->id,
             'clientable_type' => get_class($this->userClient),
             'agentable_id' => $this->userAgent->id,
             'agentable_type' => get_class($this->userAgent),
         ]);
-        $this->assertDatabaseHas('appointments', [
-            'start_time' => $newAppointment->start_time,
-            'end_time' => $newAppointment->end_time,
+        $this->assertDatabaseHas('reservations', [
+            'start_time' => $newReservation->start_time,
+            'end_time' => $newReservation->end_time,
             'clientable_id' => $newClient->id,
             'clientable_type' => get_class($newClient),
             'agentable_id' => $this->userAgent->id,
@@ -180,7 +180,7 @@ class UserTest extends TestCase
         $this->assertCount(2, $this->userClient->getClientBookedSlots());
     }
 
-    public function test_client_user_see_only_upcoming_booked_appointments()
+    public function test_client_user_see_only_upcoming_booked_reservations()
     {
         //Arrange
         $newClient = User::query()->create(['name' => 'new client','role' => 'client']);
@@ -189,38 +189,38 @@ class UserTest extends TestCase
             'end_time' => now()->addDays(4)->addHour()
         ];
         //Act
-        $appointment = $this->userAgent->agentAppointments()->create($data);
-        $appointment2 = $this->userAgent->agentAppointments()->create([
+        $reservation = $this->userAgent->agentReservations()->create($data);
+        $reservation2 = $this->userAgent->agentReservations()->create([
             'start_time' => now()->subDays(2),
             'end_time' => now()->subDays(2)->addHour(),
             'clientable_id' => $this->userClient->id,
             'clientable_type' => get_class($this->userClient),
         ]);
-        $newAppointment = $this->userAgent->agentAppointments()->create([
+        $newReservation = $this->userAgent->agentReservations()->create([
             'start_time' => now()->subDays(3),
             'end_time' => now()->subDays(3)->addHour(),
             'clientable_id' => $newClient->id,
             'clientable_type' => get_class($newClient),
         ]);
-        $this->userClient->bookAppointment($appointment);
+        $this->userClient->bookReservation($reservation);
         $data['clientable_id'] = $this->userClient->id;
         $data['clientable_type'] = get_class($this->userClient);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertInstanceOf(Appointment::class, $appointment2);
-        $this->assertInstanceOf(Appointment::class, $newAppointment);
-        $this->assertDatabaseHas('appointments', $data);
-        $this->assertDatabaseHas('appointments', [
-            'start_time' => $appointment2->start_time,
-            'end_time' => $appointment2->end_time,
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertInstanceOf(Reservation::class, $reservation2);
+        $this->assertInstanceOf(Reservation::class, $newReservation);
+        $this->assertDatabaseHas('reservations', $data);
+        $this->assertDatabaseHas('reservations', [
+            'start_time' => $reservation2->start_time,
+            'end_time' => $reservation2->end_time,
             'clientable_id' => $this->userClient->id,
             'clientable_type' => get_class($this->userClient),
             'agentable_id' => $this->userAgent->id,
             'agentable_type' => get_class($this->userAgent),
         ]);
-        $this->assertDatabaseHas('appointments', [
-            'start_time' => $newAppointment->start_time,
-            'end_time' => $newAppointment->end_time,
+        $this->assertDatabaseHas('reservations', [
+            'start_time' => $newReservation->start_time,
+            'end_time' => $newReservation->end_time,
             'clientable_id' => $newClient->id,
             'clientable_type' => get_class($newClient),
             'agentable_id' => $this->userAgent->id,
@@ -229,7 +229,7 @@ class UserTest extends TestCase
         $this->assertCount(1, $this->userClient->getClientUpcomingBookedSlots());
     }
 
-    public function test_client_user_create_appointment()
+    public function test_client_user_create_reservation()
     {
         //Arrange
         $data = [
@@ -239,15 +239,15 @@ class UserTest extends TestCase
             'agentable_type' => get_class($this->userAgent)
         ];
         //Act
-        $appointment = $this->userClient->clientAppointments()->create($data);
+        $reservation = $this->userClient->clientReservations()->create($data);
         $data['clientable_id'] = $this->userClient->id;
         $data['clientable_type'] = get_class($this->userClient);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', $data);
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', $data);
     }
 
-    public function test_client_user_cancel_appointment()
+    public function test_client_user_cancel_reservation()
     {
         //Arrange
         $data = [
@@ -257,13 +257,13 @@ class UserTest extends TestCase
             'agentable_type' => get_class($this->userAgent)
         ];
         //Act
-        $appointment = $this->userClient->clientAppointments()->create($data);
-        $this->userClient->cancelAppointment($appointment);
+        $reservation = $this->userClient->clientReservations()->create($data);
+        $this->userClient->cancelReservation($reservation);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', [
-            'start_time' => $appointment->start_time,
-            'end_time' => $appointment->end_time,
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', [
+            'start_time' => $reservation->start_time,
+            'end_time' => $reservation->end_time,
             'clientable_id' => null,
             'clientable_type' => null,
             'agentable_id' => $this->userAgent->id,
@@ -271,31 +271,31 @@ class UserTest extends TestCase
         ]);
     }
 
-    public function test_client_user_cancel_appointment_that_not_booked()
+    public function test_client_user_cancel_reservation_that_not_booked()
     {
-        $this->expectException(UnauthorizedAppointmentCancellationException::class);
+        $this->expectException(UnauthorizedReservationCancellationException::class);
         //Arrange
         $data = [
             'start_time' => now()->addDays(2),
             'end_time' => now()->addDays(2)->addHour()
         ];
         //Act
-        $appointment = $this->userAgent->agentAppointments()->create($data);
+        $reservation = $this->userAgent->agentReservations()->create($data);
         try {
 
-            $this->userClient->cancelAppointment($appointment);
+            $this->userClient->cancelReservation($reservation);
 
-        } catch (UnauthorizedAppointmentCancellationException $e) {
+        } catch (UnauthorizedReservationCancellationException $e) {
             //Assert
-            $this->assertEquals('You are not authorized to cancel this appointment.', $e->getMessage());
+            $this->assertEquals('You are not authorized to cancel this reservation.', $e->getMessage());
 
             throw $e;
         }
     }
 
-    public function test_client_user_cancel_appointment_that_booked_by_another_client()
+    public function test_client_user_cancel_reservation_that_booked_by_another_client()
     {
-        $this->expectException(UnauthorizedAppointmentCancellationException::class);
+        $this->expectException(UnauthorizedReservationCancellationException::class);
         //Arrange
         $data = [
             'start_time' => now()->addDays(2),
@@ -304,22 +304,22 @@ class UserTest extends TestCase
             'agentable_type' => get_class($this->userAgent)
         ];
         //Act
-        $appointment = $this->userClient->clientAppointments()->create($data);
+        $reservation = $this->userClient->clientReservations()->create($data);
         try {
 
-            $this->client->cancelAppointment($appointment);
+            $this->client->cancelReservation($reservation);
 
-        } catch (UnauthorizedAppointmentCancellationException $e) {
+        } catch (UnauthorizedReservationCancellationException $e) {
             //Assert
-            $this->assertEquals('You are not authorized to cancel this appointment.', $e->getMessage());
+            $this->assertEquals('You are not authorized to cancel this reservation.', $e->getMessage());
 
             throw $e;
         }
     }
 
-    public function test_client_user_cancel_appointment_that_in_the_past()
+    public function test_client_user_cancel_reservation_that_in_the_past()
     {
-        $this->expectException(ExpiredAppointmentException::class);
+        $this->expectException(ExpiredReservationException::class);
         //Arrange
         $data = [
             'start_time' => now()->subDays(2),
@@ -327,19 +327,19 @@ class UserTest extends TestCase
             'agentable_id' => $this->userAgent->id,
             'agentable_type' => get_class($this->userAgent),
         ];
-        $appointment = $this->userClient->clientAppointments()->create($data);
+        $reservation = $this->userClient->clientReservations()->create($data);
         //Act
         try {
-            $this->userClient->cancelAppointment($appointment);
-        } catch (ExpiredAppointmentException $e) {
+            $this->userClient->cancelReservation($reservation);
+        } catch (ExpiredReservationException $e) {
             //Assert
-            $this->assertEquals('Appointments in the past cannot be booked or cancelled.', $e->getMessage());
+            $this->assertEquals('Reservations in the past cannot be booked or cancelled.', $e->getMessage());
 
             throw $e;
         }
     }
 
-    public function test_create_appointment_through_user_agent()
+    public function test_create_reservation_through_user_agent()
     {
         //Arrange
         $data = [
@@ -349,13 +349,13 @@ class UserTest extends TestCase
             'clientable_type' => get_class($this->userClient)
         ];
         //Act
-        $appointment = $this->userAgent->agentAppointments()->create($data);
+        $reservation = $this->userAgent->agentReservations()->create($data);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', $data);
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', $data);
     }
 
-    public function test_appointment_without_user_client()
+    public function test_reservation_without_user_client()
     {
         //Arrange
         $data = [
@@ -363,10 +363,10 @@ class UserTest extends TestCase
             'end_time' => now()->addDays(2)->addHour()
         ];
         //Act
-        $appointment = $this->userAgent->agentAppointments()->create($data);
+        $reservation = $this->userAgent->agentReservations()->create($data);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', $data);
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', $data);
 
     }
 
@@ -378,7 +378,7 @@ class UserTest extends TestCase
             'end_time' => now()->addDays(2)->addHour()
         ];
 
-        $this->userAgent->agentAppointments()->create($data);
+        $this->userAgent->agentReservations()->create($data);
         //Act
         $availableSlots = $this->userAgent->getAvailableSlots();
         //Assert
@@ -395,7 +395,7 @@ class UserTest extends TestCase
             'clientable_type' => get_class($this->userClient)
         ];
 
-        $this->userAgent->agentAppointments()->create($data);
+        $this->userAgent->agentReservations()->create($data);
         //Act
         $bookedSlots = $this->userAgent->getAgentBookedSlots();
         //Assert
@@ -412,7 +412,7 @@ class UserTest extends TestCase
             'clientable_type' => get_class($this->userClient)
         ];
 
-        $this->userAgent->agentAppointments()->create($data);
+        $this->userAgent->agentReservations()->create($data);
         //Act
         $upcomingBookedSlots = $this->userAgent->getAgentUpcomingBookedSlots();
         //Assert
@@ -426,7 +426,7 @@ class UserTest extends TestCase
         $count = 5;
         $duration = 30;
         //Act
-        $data = AppointmentFacade::setAgent($this->userAgent)
+        $data = ReservationFacade::setAgent($this->userAgent)
             ->startTime($start_time->format('Y-m-d H:i'))
             ->count($count)
             ->duration($duration)

@@ -1,12 +1,12 @@
 <?php
 
-namespace Nzm\Appointment\Tests\Traits;
+namespace Nazemi\Laraserve\Tests\Traits;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Nzm\Appointment\Tests\TestModels\Agent;
-use Nzm\Appointment\Tests\TestModels\Client;
-use Nzm\Appointment\Tests\TestModels\User;
+use Nazemi\Laraserve\Tests\TestModels\Agent;
+use Nazemi\Laraserve\Tests\TestModels\Client;
+use Nazemi\Laraserve\Tests\TestModels\User;
 
 trait SetUpDatabase
 {
@@ -65,7 +65,7 @@ trait SetUpDatabase
         });
     }
 
-    protected function generateAppointment(): array
+    protected function generateReservation(): array
     {
         // Generate a random start time within the next month
         $startTime = $this->faker->dateTimeBetween('now', '+1 month');

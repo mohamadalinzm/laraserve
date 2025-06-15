@@ -1,13 +1,13 @@
-# Appointment Package for Laravel
+# Reservation Package for Laravel
 
-This package provides a comprehensive appointment management system for Laravel applications. It includes features for creating, managing, and validating appointments with agents and clients.
+This package provides a comprehensive reservation management system for Laravel applications. It includes features for creating, managing, and validating reservations with agents and clients.
 
 ## Installation
 
 You can install the package via Composer:
 
 ```bash
-composer require nazemi/laravel-appointment
+composer require nazemi/laraserve
 ```
 
 The package will automatically register itself.
@@ -15,7 +15,7 @@ The package will automatically register itself.
 You can publish the package's assets using the following command:
 
 ```bash
-php artisan vendor:publish --provider="Nzm\Appointment\AppointmentServiceProvider"
+php artisan vendor:publish --provider="Nazemi\Laraserve\LaraserveServiceProvider"
 ```
 
 This will publish the package's configuration file, migration files, and views.
@@ -31,8 +31,8 @@ This will create the necessary tables in your database.
 Add Clientable and Agentable traits in your User models.
 
 ```php
-use Nzm\Appointment\Traits\Clientable;
-use Nzm\Appointment\Traits\Agentable;
+use Nazemi\Laraserve\Traits\Clientable;
+use Nazemi\Laraserve\Traits\Agentable;
 
 class User extends Authenticatable
 {
@@ -43,14 +43,14 @@ class User extends Authenticatable
 Or you can use these traits in your own models.
 
 ```php
-use Nzm\Appointment\Traits\Clientable;
+use Nazemi\Laraserve\Traits\Clientable;
 
 class Patient
 {
     use Clientable;
 }
 
-use Nzm\Appointment\Traits\Agentable;
+use Nazemi\Laraserve\Traits\Agentable;
 
 class Doctor
 {
@@ -61,47 +61,47 @@ class Doctor
 
 ## Usage
 
-The package provides a comprehensive appointment management system for Laravel applications. It includes features for creating, managing, and validating appointments with agents and clients.
+The package provides a comprehensive reservation management system for Laravel applications. It includes features for creating, managing, and validating reservations with agents and clients.
 
-You can create appointments using the code below:
+You can create reservations using the code below:
 
 ```php
-use Nzm\Appointment\Facades\AppointmentFacade;
+use Nazemi\Laraserve\Facades\ReservationFacade;
 
-$appointment = AppointmentFacade::setAgent($agent)
+$reservation = ReservationFacade::setAgent($agent)
     ->setClient($client)
     ->startTime('2023-10-01 10:00')
     ->endTime('2023-10-01 11:00')
     ->save();
 ```
 
-This will create a new appointment with the specified agent, client, start time, and end time.
+This will create a new reservation with the specified agent, client, start time, and end time.
 
-You can create multiple appointments using the code below:
+You can create multiple reservations using the code below:
 
 ```php
-use Nzm\Appointment\Facades\AppointmentFacade;
+use Nazemi\Laraserve\Facades\ReservationFacade;
 
-$appointments = AppointmentFacade::setAgent($agent)
+$reservations = ReservationFacade::setAgent($agent)
     ->startTime('2023-10-01 10:00')
     ->count(5)
     ->duration(30)
     ->save();
 ````
 
-You can use all Eloquent methods to work with Appointment Model.
+You can use all Eloquent methods to work with Reservation Model.
 
-For example, you can retrieve appointments using the code below:
+For example, you can retrieve reservations using the code below:
 
 ```php
-use Nzm\Appointment\Models\Appointment;
+use Nazemi\Laraserve\Models\Reservation;
 
-$appointments = Appointment::all();
+$reservations = Reservation::all();
 ``` 
 
-This will retrieve all appointments from the database.
+This will retrieve all reservations from the database.
 
-You can retrieve appointments for a specific agent and client using the code below:
+You can retrieve reservations for a specific agent and client using the code below:
 
 ```php
 use App\Models\User;
@@ -109,15 +109,15 @@ use App\Models\User;
 $agent = User::find(1);
 $client = User::find(2);
 
-$agent->agentAppointments;
-$client->clientAppointments;
+$agent->agentReservations;
+$client->clientReservations;
 ```
 
-This will retrieve all appointments for the specified agent and client.
+This will retrieve all reservations for the specified agent and client.
 
 ## Configuration
 
-The package's configuration file is located at `config/appointment.php`. You can modify this file to customize the package's behavior.
+The package's configuration file is located at `config/laraserve.php`. You can modify this file to customize the package's behavior.
 
 ## License
 

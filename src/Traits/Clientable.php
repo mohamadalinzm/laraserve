@@ -1,62 +1,62 @@
 <?php
 
-namespace Nzm\Appointment\Traits;
+namespace Nazemi\Laraserve\Traits;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Nzm\Appointment\Exceptions\AppointmentAlreadyBookedException;
-use Nzm\Appointment\Exceptions\ExpiredAppointmentException;
-use Nzm\Appointment\Exceptions\UnauthorizedAppointmentCancellationException;
-use Nzm\Appointment\Models\Appointment;
+use Nazemi\Laraserve\Exceptions\ReservationAlreadyBookedException;
+use Nazemi\Laraserve\Exceptions\ExpiredReservationException;
+use Nazemi\Laraserve\Exceptions\UnauthorizedReservationCancellationException;
+use Nazemi\Laraserve\Models\Reservation;
 
 trait Clientable
 {
-    public function clientAppointments(): MorphMany
+    public function clientReservations(): MorphMany
     {
-        return $this->morphMany(Appointment::class, 'clientable');
+        return $this->morphMany(Reservation::class, 'clientable');
     }
 
     public function getClientBookedSlots(): Collection
     {
-        return $this->clientAppointments()
+        return $this->clientReservations()
             ->where('start_time', '>', now())
             ->get();
     }
 
     public function getClientUpcomingBookedSlots(): Collection
     {
-        return $this->clientAppointments()
+        return $this->clientReservations()
             ->where('start_time', '>', now())
             ->get();
     }
 
-    public function bookAppointment(Appointment $appointment): Appointment
+    public function bookReservation(Reservation $reservation): Reservation
     {
-        if ($appointment->start_time < now()) {
-            throw new ExpiredAppointmentException;
+        if ($reservation->start_time < now()) {
+            throw new ExpiredReservationException;
         }
 
-        if ($appointment->clientable_id !== null) {
-            throw new AppointmentAlreadyBookedException;
+        if ($reservation->clientable_id !== null) {
+            throw new ReservationAlreadyBookedException;
         }
 
-        return tap($appointment)->update([
+        return tap($reservation)->update([
             'clientable_id' => $this->id,
             'clientable_type' => get_class($this),
         ]);
     }
 
-    public function cancelAppointment(Appointment $appointment)
+    public function cancelReservation(Reservation $reservation)
     {
-        if ($appointment->start_time < now()) {
-            throw new ExpiredAppointmentException;
+        if ($reservation->start_time < now()) {
+            throw new ExpiredReservationException;
         }
 
-        if ($appointment->clientable_id !== $this->id) {
-            throw new UnauthorizedAppointmentCancellationException;
+        if ($reservation->clientable_id !== $this->id) {
+            throw new UnauthorizedReservationCancellationException;
         }
 
-        return tap($appointment)->update([
+        return tap($reservation)->update([
             'clientable_id' => null,
             'clientable_type' => null,
         ]);

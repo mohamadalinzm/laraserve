@@ -1,115 +1,115 @@
 <?php
 
-namespace Nzm\Appointment\Tests\Feature\Models;
+namespace Nazemi\Laraserve\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
-use Nzm\Appointment\Facades\AppointmentFacade;
-use Nzm\Appointment\Models\Appointment;
-use Nzm\Appointment\Tests\Traits\SetUpDatabase;
+use Nazemi\Laraserve\Facades\ReservationFacade;
+use Nazemi\Laraserve\Models\Reservation;
+use Nazemi\Laraserve\Tests\Traits\SetUpDatabase;
 use Orchestra\Testbench\TestCase;
 
-class AppointmentTest extends TestCase
+class ReservationTest extends TestCase
 {
     use RefreshDatabase,SetUpDatabase;
 
-    public function test_create_appointment()
+    public function test_create_reservation()
     {
         //Arrange
-        $data = $this->generateAppointment();
+        $data = $this->generateReservation();
         //Act
-        $appointment = Appointment::query()->create($data);
+        $reservation = Reservation::query()->create($data);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', $data);
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', $data);
     }
 
-    public function test_create_appointment_with_note()
+    public function test_create_reservation_with_note()
     {
         //Arrange
-        $data = $this->generateAppointment();
+        $data = $this->generateReservation();
         $data['note'] = 'This is a note';
         //Act
-        $appointment = Appointment::query()->create($data);
+        $reservation = Reservation::query()->create($data);
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', $data);
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', $data);
     }
 
-    public function test_create_appointment_via_facade()
+    public function test_create_reservation_via_facade()
     {
-        $appointment = AppointmentFacade::setAgent($this->agent)
+        $reservation = ReservationFacade::setAgent($this->agent)
             ->setClient($this->client)
             ->startTime(now()->format('Y-m-d H:i'))
             ->endTime(now()->addMinutes(30)->format('Y-m-d H:i'))
             ->save();
 
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', [
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', [
             'agentable_type' => get_class($this->agent),
             'agentable_id' => $this->agent->id,
             'clientable_type' => get_class($this->client),
             'clientable_id' => $this->client->id,
-            'start_time' => $appointment->start_time,
-            'end_time' => $appointment->end_time,
+            'start_time' => $reservation->start_time,
+            'end_time' => $reservation->end_time,
         ]);
     }
 
-    public function test_create_appointment_with_note_via_facade()
+    public function test_create_reservation_with_note_via_facade()
     {
         //Arrange
         $note = 'This is a note';
         //Act
-        $appointment = AppointmentFacade::setAgent($this->agent)
+        $reservation = ReservationFacade::setAgent($this->agent)
             ->setClient($this->client)
             ->startTime(now()->format('Y-m-d H:i'))
             ->endTime(now()->addMinutes(30)->format('Y-m-d H:i'))
             ->note($note)
             ->save();
         //Assert
-        $this->assertInstanceOf(Appointment::class, $appointment);
-        $this->assertDatabaseHas('appointments', [
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertDatabaseHas('reservations', [
             'agentable_type' => get_class($this->agent),
             'agentable_id' => $this->agent->id,
             'clientable_type' => get_class($this->client),
             'clientable_id' => $this->client->id,
-            'start_time' => $appointment->start_time,
-            'end_time' => $appointment->end_time,
+            'start_time' => $reservation->start_time,
+            'end_time' => $reservation->end_time,
             'note' => $note,
         ]);
     }
 
-    public function test_create_appointment_via_count_and_duration_via_facade()
+    public function test_create_reservation_via_count_and_duration_via_facade()
     {
         $duration = 30;
         $count = 3;
-        $appointments = AppointmentFacade::setAgent($this->agent)
+        $reservations = ReservationFacade::setAgent($this->agent)
             ->startTime(now()->format('Y-m-d H:i'))
             ->duration($duration)
             ->count($count)
             ->save();
 
-        $this->assertIsArray($appointments);
-        $this->assertCount($count, $appointments);
+        $this->assertIsArray($reservations);
+        $this->assertCount($count, $reservations);
 
-        foreach ($appointments as $appointment) {
-            $this->assertInstanceOf(Appointment::class, $appointment);
-            $this->assertDatabaseHas('appointments', [
+        foreach ($reservations as $reservation) {
+            $this->assertInstanceOf(Reservation::class, $reservation);
+            $this->assertDatabaseHas('reservations', [
                 'agentable_type' => get_class($this->agent),
                 'agentable_id' => $this->agent->id,
-                'start_time' => $appointment->start_time,
-                'end_time' => $appointment->end_time,
+                'start_time' => $reservation->start_time,
+                'end_time' => $reservation->end_time,
             ]);
         }
     }
 
-    public function test_validation_on_add_appointment_via_count_and_without_duration_via_facade()
+    public function test_validation_on_add_reservation_via_count_and_without_duration_via_facade()
     {
         $this->expectException(ValidationException::class);
 
         try {
 
-            AppointmentFacade::setAgent($this->agent)
+            ReservationFacade::setAgent($this->agent)
                 ->setClient($this->client)
                 ->startTime(now()->format('Y-m-d H:i'))
                 ->count(3)
@@ -125,13 +125,13 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function test_validation_on_add_appointment_via_duration_and_without_count_via_facade()
+    public function test_validation_on_add_reservation_via_duration_and_without_count_via_facade()
     {
         $this->expectException(ValidationException::class);
 
         try {
 
-            AppointmentFacade::setAgent($this->agent)
+            ReservationFacade::setAgent($this->agent)
                 ->setClient($this->client)
                 ->startTime(now()->format('Y-m-d H:i'))
                 ->duration(30)
@@ -147,13 +147,13 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function test_validation_on_add_appointment_without_count_and_duration_via_facade()
+    public function test_validation_on_add_reservation_without_count_and_duration_via_facade()
     {
         $this->expectException(ValidationException::class);
 
         try {
 
-            AppointmentFacade::setAgent($this->agent)
+            ReservationFacade::setAgent($this->agent)
                 ->setClient($this->client)
                 ->startTime(now()->format('Y-m-d H:i'))
                 ->save();
@@ -167,13 +167,13 @@ class AppointmentTest extends TestCase
         }
     }
 
-    public function test_validation_on_add_appointment_without_start_time_via_facade()
+    public function test_validation_on_add_reservation_without_start_time_via_facade()
     {
         $this->expectException(ValidationException::class);
 
         try {
 
-            AppointmentFacade::setAgent($this->agent)
+            ReservationFacade::setAgent($this->agent)
                 ->setClient($this->client)
                 ->save();
 
@@ -187,19 +187,19 @@ class AppointmentTest extends TestCase
     }
 
     //add test for overlap validation
-    public function test_validation_on_add_appointment_with_overlap_via_facade()
+    public function test_validation_on_add_reservation_with_overlap_via_facade()
     {
         $this->expectException(ValidationException::class);
 
         try {
 
-            $data = $this->generateAppointment();
+            $data = $this->generateReservation();
             $data['start_time'] = now()->format('Y-m-d H:i');
             $data['end_time'] = now()->addMinutes(30)->format('Y-m-d H:i');
 
-            $this->agent->agentAppointments()->create($data);
+            $this->agent->agentReservations()->create($data);
 
-            AppointmentFacade::setAgent($this->agent)
+            ReservationFacade::setAgent($this->agent)
                 ->setClient($this->client)
                 ->startTime(now()->addMinutes(10)->format('Y-m-d H:i'))
                 ->endTime(now()->addMinutes(40)->format('Y-m-d H:i'))
@@ -208,7 +208,7 @@ class AppointmentTest extends TestCase
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
 
-            $this->assertTrue($errors->has('start_time'), 'This appointment conflicts with an existing appointment time.');
+            $this->assertTrue($errors->has('start_time'), 'This reservation conflicts with an existing reservation time.');
 
             throw $e;
         }
