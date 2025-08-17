@@ -204,29 +204,11 @@ class ReservationBuilder
     private function getStartTimeValidationCallback(): callable
     {
         return function ($attribute, $value, $fail) {
-            if (!config('laraserve.overlap', false)) {
-                $this->validateNoExistingReservation($value, $fail);
+            if (config('laraserve.overlap', true))
+            {
+                $this->validateNoTimeOverlap($value, $fail);
             }
-
-            $this->validateNoTimeOverlap($value, $fail);
         };
-    }
-
-    private function validateNoExistingReservation($value, $fail): void
-    {
-        $query = Reservation::query()
-            ->where('provider_id', $this->provider->id)
-            ->where('provider_type', get_class($this->provider))
-            ->where('start_time', $value);
-
-        if ($this->recipient) {
-            $query->where('recipient_id', $this->recipient->id)
-                ->where('recipient_type', get_class($this->recipient));
-        }
-
-        if ($query->exists()) {
-            $fail('A reservation at this time already exists.');
-        }
     }
 
     private function validateNoTimeOverlap($value, $fail): void
@@ -239,12 +221,14 @@ class ReservationBuilder
                     ->where('end_time', '>', $value);
             });
 
-        if ($this->recipient) {
+        if ($this->recipient)
+        {
             $overlapQuery->where('recipient_id', $this->recipient->id)
                 ->where('recipient_type', get_class($this->recipient));
         }
 
-        if ($overlapQuery->exists()) {
+        if ($overlapQuery->exists())
+        {
             $fail('This reservation conflicts with an existing reservation time.');
         }
     }

@@ -6,9 +6,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Nazemi\Laraserve\Exceptions\ReservationAlreadyBookedException;
 use Nazemi\Laraserve\Exceptions\ExpiredReservationException;
 use Nazemi\Laraserve\Exceptions\UnauthorizedReservationCancellationException;
-use Nazemi\Laraserve\Facades\ReservationFacade;
+use Nazemi\Laraserve\Facades\Laraserve;
 use Nazemi\Laraserve\Models\Reservation;
-use Nazemi\Laraserve\Tests\TestModels\Recipient;
 use Nazemi\Laraserve\Tests\TestModels\User;
 use Nazemi\Laraserve\Tests\Traits\SetUpDatabase;
 use Orchestra\Testbench\TestCase;
@@ -426,7 +425,7 @@ class UserTest extends TestCase
         $count = 5;
         $duration = 30;
         //Act
-        $data = ReservationFacade::setProvider($this->providerUser)
+        $data = Laraserve::setProvider($this->providerUser)
             ->startTime($start_time->format('Y-m-d H:i'))
             ->count($count)
             ->duration($duration)

@@ -4,7 +4,7 @@ namespace Nazemi\Laraserve\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
-use Nazemi\Laraserve\Facades\ReservationFacade;
+use Nazemi\Laraserve\Facades\Laraserve;
 use Nazemi\Laraserve\Models\Reservation;
 use Nazemi\Laraserve\Tests\Traits\SetUpDatabase;
 use Orchestra\Testbench\TestCase;
@@ -24,6 +24,22 @@ class ReservationTest extends TestCase
         $this->assertDatabaseHas('reservations', $data);
     }
 
+    public function test_provider_relation()
+    {
+        $data = $this->generateReservation();
+        $reservation = Reservation::query()->create($data);
+        $this->assertInstanceOf($this->provider::class, $reservation->provider);
+        $this->assertEquals($this->provider->id, $reservation->provider->id);
+    }
+
+    public function test_recipient_relation()
+    {
+        $data = $this->generateReservation();
+        $reservation = Reservation::query()->create($data);
+        $this->assertInstanceOf($this->recipient::class, $reservation->recipient);
+        $this->assertEquals($this->recipient->id, $reservation->recipient->id);
+    }
+
     public function test_create_reservation_with_note()
     {
         //Arrange
@@ -38,7 +54,7 @@ class ReservationTest extends TestCase
 
     public function test_create_reservation_via_facade()
     {
-        $reservation = ReservationFacade::setProvider($this->provider)
+        $reservation = Laraserve::setProvider($this->provider)
             ->setRecipient($this->recipient)
             ->startTime(now()->format('Y-m-d H:i'))
             ->endTime(now()->addMinutes(30)->format('Y-m-d H:i'))
@@ -60,7 +76,7 @@ class ReservationTest extends TestCase
         //Arrange
         $note = 'This is a note';
         //Act
-        $reservation = ReservationFacade::setProvider($this->provider)
+        $reservation = Laraserve::setProvider($this->provider)
             ->setRecipient($this->recipient)
             ->startTime(now()->format('Y-m-d H:i'))
             ->endTime(now()->addMinutes(30)->format('Y-m-d H:i'))
@@ -83,7 +99,7 @@ class ReservationTest extends TestCase
     {
         $duration = 30;
         $count = 3;
-        $reservations = ReservationFacade::setProvider($this->provider)
+        $reservations = Laraserve::setProvider($this->provider)
             ->startTime(now()->format('Y-m-d H:i'))
             ->duration($duration)
             ->count($count)
@@ -109,7 +125,7 @@ class ReservationTest extends TestCase
 
         try {
 
-            ReservationFacade::setProvider($this->provider)
+            Laraserve::setProvider($this->provider)
                 ->setRecipient($this->recipient)
                 ->startTime(now()->format('Y-m-d H:i'))
                 ->count(3)
@@ -131,7 +147,7 @@ class ReservationTest extends TestCase
 
         try {
 
-            ReservationFacade::setProvider($this->provider)
+            Laraserve::setProvider($this->provider)
                 ->setRecipient($this->recipient)
                 ->startTime(now()->format('Y-m-d H:i'))
                 ->duration(30)
@@ -153,7 +169,7 @@ class ReservationTest extends TestCase
 
         try {
 
-            ReservationFacade::setProvider($this->provider)
+            Laraserve::setProvider($this->provider)
                 ->setRecipient($this->recipient)
                 ->startTime(now()->format('Y-m-d H:i'))
                 ->save();
@@ -173,7 +189,7 @@ class ReservationTest extends TestCase
 
         try {
 
-            ReservationFacade::setProvider($this->provider)
+            Laraserve::setProvider($this->provider)
                 ->setRecipient($this->recipient)
                 ->save();
 
@@ -186,7 +202,6 @@ class ReservationTest extends TestCase
         }
     }
 
-    //add test for overlap validation
     public function test_validation_on_add_reservation_with_overlap_via_facade()
     {
         $this->expectException(ValidationException::class);
@@ -199,7 +214,7 @@ class ReservationTest extends TestCase
 
             $this->provider->providedReservations()->create($data);
 
-            ReservationFacade::setProvider($this->provider)
+            Laraserve::setProvider($this->provider)
                 ->setRecipient($this->recipient)
                 ->startTime(now()->addMinutes(10)->format('Y-m-d H:i'))
                 ->endTime(now()->addMinutes(40)->format('Y-m-d H:i'))
@@ -212,5 +227,42 @@ class ReservationTest extends TestCase
 
             throw $e;
         }
+    }
+
+    public function test_Add_reservation_when_config_overlap_is_true_via_facade()
+    {
+        $this->expectException(ValidationException::class);
+
+        config(['laraserve.overlap' => true]);
+        $data = $this->generateReservation();
+        $data['start_time'] = now()->format('Y-m-d H:i');
+        $data['end_time'] = now()->addMinutes(30)->format('Y-m-d H:i');
+
+        $reservation = $this->provider->providedReservations()->create($data);
+
+        $reservation2 = Laraserve::setProvider($this->provider)
+            ->setRecipient($this->recipient)
+            ->startTime(now()->addMinutes(10)->format('Y-m-d H:i'))
+            ->endTime(now()->addMinutes(40)->format('Y-m-d H:i'))
+            ->save();
+
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertInstanceOf(Reservation::class, $reservation2);
+        $this->assertDatabaseHas('reservations', [
+            'provider_type' => get_class($this->provider),
+            'provider_id' => $this->provider->id,
+            'recipient_type' => get_class($this->recipient),
+            'recipient_id' => $this->recipient->id,
+            'start_time' => $reservation->start_time,
+            'end_time' => $reservation->end_time,
+        ]);
+        $this->assertDatabaseHas('reservations', [
+            'provider_type' => get_class($this->provider),
+            'provider_id' => $this->provider->id,
+            'recipient_type' => get_class($this->recipient),
+            'recipient_id' => $this->recipient->id,
+            'start_time' => $reservation2->start_time,
+            'end_time' => $reservation2->end_time,
+        ]);
     }
 }

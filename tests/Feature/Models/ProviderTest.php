@@ -3,7 +3,7 @@
 namespace Nazemi\Laraserve\Tests\Feature\Models;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Nazemi\Laraserve\Facades\ReservationFacade;
+use Nazemi\Laraserve\Facades\Laraserve;
 use Nazemi\Laraserve\Models\Reservation;
 use Nazemi\Laraserve\Tests\Traits\SetUpDatabase;
 use Orchestra\Testbench\TestCase;
@@ -95,7 +95,7 @@ class ProviderTest extends TestCase
         $count = 5;
         $duration = 30;
         //Act
-        $data = ReservationFacade::setProvider($this->provider)
+        $data = Laraserve::setProvider($this->provider)
             ->startTime($start_time->format('Y-m-d H:i'))
             ->count($count)
             ->duration($duration)
@@ -114,7 +114,7 @@ class ProviderTest extends TestCase
         $count = 5;
         $duration = 30;
         //Act
-        ReservationFacade::setProvider($this->provider)
+        Laraserve::setProvider($this->provider)
             ->startTime($start_time->format('Y-m-d H:i'))
             ->count($count)
             ->duration($duration)

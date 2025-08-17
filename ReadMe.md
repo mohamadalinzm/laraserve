@@ -72,9 +72,9 @@ The package provides a comprehensive reservation management system for Laravel a
 You can create reservations using the code below:
 
 ```php
-use Nazemi\Laraserve\Facades\ReservationFacade;
+use Nazemi\Laraserve\Facades\Laraserve;
 
-$reservation = ReservationFacade::setProvider($provider)
+$reservation = Laraserve::setProvider($provider)
     ->setRecipient($recipient)
     ->startTime('2023-10-01 10:00')
     ->endTime('2023-10-01 11:00')
@@ -86,9 +86,9 @@ This will create a new reservation with the specified provider, recipient, start
 You can create multiple reservations using the code below:
 
 ```php
-use Nazemi\Laraserve\Facades\ReservationFacade;
+use Nazemi\Laraserve\Facades\Laraserve;
 
-$reservations = ReservationFacade::setProvider($provider)
+$reservations = Laraserve::setProvider($provider)
     ->startTime('2023-10-01 10:00')
     ->count(5)
     ->duration(30)

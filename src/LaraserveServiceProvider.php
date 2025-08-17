@@ -9,17 +9,26 @@ class LaraserveServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(ReservationBuilder::class, function () {
-            return new ReservationBuilder;
-        });
+        $this->mergeConfigFrom(__DIR__.'/config/laraserve.php', 'laraserve');
+
+        $this->app->singleton(ReservationBuilder::class);
+        $this->app->bind('Laraserve', ReservationBuilder::class);
     }
 
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
 
-        $this->publishes([
-            __DIR__.'/config/laraserve.php' => config_path('laraserve.php'),
-        ]);
+        if ($this->app->runningInConsole())
+        {
+            $this->publishes([
+                __DIR__.'/config/laraserve.php' => config_path('laraserve.php'),
+            ]);
+
+            $this->publishes([
+                __DIR__.'/database/migrations' => database_path('migrations'),
+            ], 'laraserve-migrations');
+        }
+
     }
 }

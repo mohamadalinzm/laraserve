@@ -4,6 +4,7 @@ namespace Nazemi\Laraserve\Tests\Traits;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Nazemi\Laraserve\Builder\ReservationBuilder;
 use Nazemi\Laraserve\Tests\TestModels\Provider;
 use Nazemi\Laraserve\Tests\TestModels\Recipient;
 use Nazemi\Laraserve\Tests\TestModels\User;
@@ -28,6 +29,9 @@ trait SetUpDatabase
         $this->providerUser = User::query()->create(['name' => $this->faker->name,'role' => 'provider']);
         $this->recipient = Recipient::query()->create(['name' => $this->faker->name]);
         $this->recipientUser = User::query()->create(['name' => $this->faker->name,'role' => 'recipient']);
+
+        $this->app->singleton(ReservationBuilder::class);
+        $this->app->bind('Laraserve', ReservationBuilder::class);
     }
 
     protected function getEnvironmentSetUp($app): void

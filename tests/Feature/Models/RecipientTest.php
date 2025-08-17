@@ -309,4 +309,55 @@ class RecipientTest extends TestCase
             throw $e;
         }
     }
+
+    public function test_recipient_get_upcoming_reservations()
+    {
+        //Arrange
+        $data = $this->generateReservation();
+        unset($data['recipient_id']);
+        unset($data['recipient_type']);
+        //Act
+        $reservation = $this->provider->providedReservations()->create($data);
+        $reservation2 = $this->provider->providedReservations()->create([
+            'start_time' => now()->addDays(2),
+            'end_time' => now()->addDays(2)->addHour(),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
+        ]);
+        $reservation3 = $this->provider->providedReservations()->create([
+            'start_time' => now()->subDays(2),
+            'end_time' => now()->subDays(2)->addHour(),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
+        ]);
+        $this->recipient->reserve($reservation);
+        $data['recipient_id'] = $this->recipient->id;
+        $data['recipient_type'] = get_class($this->recipient);
+        //Assert
+        $this->assertInstanceOf(Reservation::class, $reservation);
+        $this->assertInstanceOf(Reservation::class, $reservation2);
+        $this->assertInstanceOf(Reservation::class, $reservation3);
+        $this->assertDatabaseHas('reservations', $data);
+        $this->assertDatabaseHas('reservations', [
+            'start_time' => $reservation2->start_time,
+            'end_time' => $reservation2->end_time,
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
+        ]);
+        $this->assertDatabaseHas('reservations', [
+            'start_time' => $reservation3->start_time,
+            'end_time' => $reservation3->end_time,
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
+        ]);
+        $this->assertCount(3, $this->recipient->receivedReservations()->get());
+        $upcomingReservations = $this->recipient->getUpcomingReservations();
+        $this->assertCount(2, $upcomingReservations);
+        $this->assertTrue($upcomingReservations->contains($reservation2));
+        $this->assertFalse($upcomingReservations->contains($reservation3));
+    }
 }

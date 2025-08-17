@@ -43,7 +43,10 @@
         "laravel": {
             "providers": [
                 "Nazemi\\Laraserve\\LaraserveServiceProvider"
-            ]
+            ],
+            "aliases": {
+                "Laraserve": "Nazemi\\Laraserve\\Facades\\Laraserve"
+            }
         }
     }
 }
