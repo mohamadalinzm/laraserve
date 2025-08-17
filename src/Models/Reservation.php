@@ -8,24 +8,22 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Reservation extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'agentable_type',
-        'agentable_id',
-        'clientable_type',
-        'clientable_id',
+        'provider_type',
+        'provider_id',
+        'recipient_type',
+        'recipient_id',
         'start_time',
         'end_time',
         'note',
     ];
 
-    public function agentable(): MorphTo
+    public function provider(): MorphTo
     {
         return $this->morphTo();
     }
 
-    public function clientable(): MorphTo
+    public function recipient(): MorphTo
     {
         return $this->morphTo();
     }

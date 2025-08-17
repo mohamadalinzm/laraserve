@@ -3,12 +3,12 @@
 namespace Nazemi\Laraserve\Tests\TestModels;
 
 use Illuminate\Database\Eloquent\Model;
-use Nazemi\Laraserve\Traits\Agentable;
-use Nazemi\Laraserve\Traits\Clientable;
+use Nazemi\Laraserve\Traits\IsProvider;
+use Nazemi\Laraserve\Traits\IsRecipient;
 
 class User extends Model
 {
-    use Agentable,Clientable;
+    use IsProvider,IsRecipient;
 
     protected $table = 'users';
 

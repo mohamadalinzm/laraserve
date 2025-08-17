@@ -8,33 +8,33 @@ use Nazemi\Laraserve\Models\Reservation;
 use Nazemi\Laraserve\Tests\Traits\SetUpDatabase;
 use Orchestra\Testbench\TestCase;
 
-class AgentTest extends TestCase
+class ProviderTest extends TestCase
 {
     use RefreshDatabase,SetUpDatabase;
 
-    public function test_create_reservation_through_agent()
+    public function test_create_reservation_through_provider()
     {
         //Arrange
         $data = $this->generateReservation();
         //Act
-        $reservation = $this->agent->agentReservations()->create($data);
+        $reservation = $this->provider->providedReservations()->create($data);
         //Assert
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertDatabaseHas('reservations', $data);
     }
 
-    public function test_reservation_without_client()
+    public function test_reservation_without_recipient()
     {
         //Arrange
         $data = $this->generateReservation();
 
-        unset($data['agentable_id']);
-        unset($data['agentable_type']);
-        unset($data['clientable_id']);
-        unset($data['clientable_type']);
+        unset($data['provider_id']);
+        unset($data['provider_type']);
+        unset($data['recipient_id']);
+        unset($data['recipient_type']);
 
         //Act
-        $reservation = $this->agent->agentReservations()->create($data);
+        $reservation = $this->provider->providedReservations()->create($data);
         //Assert
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertDatabaseHas('reservations', $data);
@@ -46,14 +46,14 @@ class AgentTest extends TestCase
         //Arrange
         $data = $this->generateReservation();
 
-        unset($data['agentable_id']);
-        unset($data['agentable_type']);
-        unset($data['clientable_id']);
-        unset($data['clientable_type']);
+        unset($data['provider_id']);
+        unset($data['provider_type']);
+        unset($data['recipient_id']);
+        unset($data['recipient_type']);
 
-        $this->agent->agentReservations()->create($data);
+        $this->provider->providedReservations()->create($data);
         //Act
-        $availableSlots = $this->agent->getAvailableSlots();
+        $availableSlots = $this->provider->getAvailableSlots();
         //Assert
         $this->assertCount(1, $availableSlots);
     }
@@ -63,12 +63,12 @@ class AgentTest extends TestCase
         //Arrange
         $data = $this->generateReservation();
 
-        unset($data['agentable_id']);
-        unset($data['agentable_type']);
+        unset($data['provider_id']);
+        unset($data['provider_type']);
 
-        $this->agent->agentReservations()->create($data);
+        $this->provider->providedReservations()->create($data);
         //Act
-        $bookedSlots = $this->agent->getAgentBookedSlots();
+        $bookedSlots = $this->provider->getBookedSlots();
         //Assert
         $this->assertCount(1, $bookedSlots);
     }
@@ -78,12 +78,12 @@ class AgentTest extends TestCase
         //Arrange
         $data = $this->generateReservation();
 
-        unset($data['agentable_id']);
-        unset($data['agentable_type']);
+        unset($data['provider_id']);
+        unset($data['provider_type']);
 
-        $this->agent->agentReservations()->create($data);
+        $this->provider->providedReservations()->create($data);
         //Act
-        $upcomingBookedSlots = $this->agent->getAgentUpcomingBookedSlots();
+        $upcomingBookedSlots = $this->provider->getUpcomingBookedSlots();
         //Assert
         $this->assertCount(1, $upcomingBookedSlots);
     }
@@ -95,13 +95,13 @@ class AgentTest extends TestCase
         $count = 5;
         $duration = 30;
         //Act
-        $data = ReservationFacade::setAgent($this->agent)
+        $data = ReservationFacade::setProvider($this->provider)
             ->startTime($start_time->format('Y-m-d H:i'))
             ->count($count)
             ->duration($duration)
             ->note('Test')
             ->save();
-        $slots = $this->agent->getSlotsByDate($start_time->toDateString());
+        $slots = $this->provider->getSlotsByDate($start_time->toDateString());
         //Assert
         $this->assertCount($count, $data);
         $this->assertCount($count, $slots);
@@ -114,13 +114,13 @@ class AgentTest extends TestCase
         $count = 5;
         $duration = 30;
         //Act
-        ReservationFacade::setAgent($this->agent)
+        ReservationFacade::setProvider($this->provider)
             ->startTime($start_time->format('Y-m-d H:i'))
             ->count($count)
             ->duration($duration)
             ->note('Test')
             ->save();
-        $slot = $this->agent->findSlotByDate($start_time->format('Y-m-d H:i'));
+        $slot = $this->provider->findSlotByDate($start_time->format('Y-m-d H:i'));
         //Assert
         $this->assertInstanceOf(Reservation::class, $slot);
         $this->assertEquals($start_time->format('Y-m-d H:i'), $slot->start_time);

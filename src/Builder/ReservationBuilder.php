@@ -9,9 +9,9 @@ use Nazemi\Laraserve\Models\Reservation;
 
 class ReservationBuilder
 {
-    protected $agentable;
+    protected $provider;
 
-    protected $clientable = null;
+    protected $recipient = null;
 
     protected $startTime;
 
@@ -23,16 +23,16 @@ class ReservationBuilder
 
     protected ?string $note = null;
 
-    public function setAgent($agentable): static
+    public function setProvider($provider): static
     {
-        $this->agentable = $agentable;
+        $this->provider = $provider;
 
         return $this;
     }
 
-    public function setClient($clientable = null): static
+    public function setRecipient($recipient = null): static
     {
-        $this->clientable = $clientable;
+        $this->recipient = $recipient;
 
         return $this;
     }
@@ -83,8 +83,8 @@ class ReservationBuilder
     protected function validate(): void
     {
         $validationData = [
-            'agentable_id' => $this->agentable?->id,
-            'agentable_type' => get_class($this->agentable),
+            'provider_id' => $this->provider?->id,
+            'provider_type' => get_class($this->provider),
             'start_time' => $this->startTime,
             'end_time' => $this->endTime,
             'count' => $this->count,
@@ -93,71 +93,36 @@ class ReservationBuilder
         ];
 
         $validationRules = [
-            'agentable_id' => 'required|integer|exists:'.$this->agentable->getTable().',id',
-            'agentable_type' => 'required|string',
+            'provider_id' => [
+                'required',
+                'integer',
+                'exists:' . $this->provider->getTable() . ',id',
+            ],
+            'provider_type' => ['required', 'string'],
             'start_time' => [
                 'required',
                 'date_format:Y-m-d H:i',
                 'before:end_time',
-                function ($attribute, $value, $fail) {
-                    // Existing duplicate check
-                    if (! config('laraserve.duplicate', false)) {
-                        $query = Reservation::query()
-                            ->where('agentable_id', $this->agentable->id)
-                            ->where('agentable_type', get_class($this->agentable))
-                            ->where('start_time', $value);
-
-                        // Only check for existing reservation if a client is set
-                        if ($this->clientable) {
-                            $query->where('clientable_id', $this->clientable->id)
-                                ->where('clientable_type', get_class($this->clientable));
-                        }
-
-                        $exists = $query->exists();
-
-                        if ($exists) {
-                            $fail('A reservation at this time already exists.');
-                        }
-                    }
-
-                    // New overlap validation
-                    $overlapQuery = Reservation::query()
-                        ->where('agentable_id', $this->agentable->id)
-                        ->where('agentable_type', get_class($this->agentable))
-                        ->where(function ($query) use ($value) {
-                            // Check if new reservation's start time is within an existing reservation's time range
-                            $query->where(function ($subQuery) use ($value) {
-                                $subQuery->where('start_time', '<=', $value)
-                                    ->where('end_time', '>', $value);
-                            });
-                        });
-
-                    // Only check for existing reservation if a client is set
-                    if ($this->clientable) {
-                        $overlapQuery->where('clientable_id', $this->clientable->id)
-                            ->where('clientable_type', get_class($this->clientable));
-                    }
-
-                    $hasOverlap = $overlapQuery->exists();
-
-                    if ($hasOverlap) {
-                        $fail('This reservation conflicts with an existing reservation time.');
-                    }
-                },
+                $this->getStartTimeValidationCallback(),
             ],
-            'end_time' => ['nullable', 'required_without:duration,count', 'date_format:Y-m-d H:i', 'after:start_time'],
+            'end_time' => [
+                'nullable',
+                'required_without:duration,count',
+                'date_format:Y-m-d H:i',
+                'after:start_time',
+            ],
             'count' => ['nullable', 'integer', 'min:1', 'required_with:duration'],
             'duration' => ['nullable', 'integer', 'min:1', 'required_with:count'],
             'note' => ['nullable', 'string'],
         ];
 
-        // Add optional client validation if client is set
-        if ($this->clientable) {
-            $validationData['clientable_id'] = $this->clientable->id;
-            $validationData['clientable_type'] = get_class($this->clientable);
+        // Add optional recipient validation if recipient is set
+        if ($this->recipient) {
+            $validationData['recipient_id'] = $this->recipient->id;
+            $validationData['recipient_type'] = get_class($this->recipient);
 
-            $validationRules['clientable_id'] = 'sometimes|integer|exists:'.$this->clientable->getTable().',id';
-            $validationRules['clientable_type'] = 'sometimes|string';
+            $validationRules['recipient_id'] = ['sometimes','integer','exists:'.$this->recipient->getTable().',id'];
+            $validationRules['recipient_type'] = ['sometimes','string'];
         }
 
         $validator = Validator::make($validationData, $validationRules);
@@ -220,19 +185,67 @@ class ReservationBuilder
     private function prepareReservationData(string $startTime, string $endTime): array
     {
         $reservationData = [
-            'agentable_id' => $this->agentable->id,
-            'agentable_type' => get_class($this->agentable),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
             'start_time' => $startTime,
             'end_time' => $endTime,
             'note' => $this->note,
         ];
 
-        // Add client data only if clientable is set
-        if ($this->clientable) {
-            $reservationData['clientable_id'] = $this->clientable->id;
-            $reservationData['clientable_type'] = get_class($this->clientable);
+        // Add recipient data only if recipient is set
+        if ($this->recipient) {
+            $reservationData['recipient_id'] = $this->recipient->id;
+            $reservationData['recipient_type'] = get_class($this->recipient);
         }
 
         return $reservationData;
+    }
+
+    private function getStartTimeValidationCallback(): callable
+    {
+        return function ($attribute, $value, $fail) {
+            if (!config('laraserve.overlap', false)) {
+                $this->validateNoExistingReservation($value, $fail);
+            }
+
+            $this->validateNoTimeOverlap($value, $fail);
+        };
+    }
+
+    private function validateNoExistingReservation($value, $fail): void
+    {
+        $query = Reservation::query()
+            ->where('provider_id', $this->provider->id)
+            ->where('provider_type', get_class($this->provider))
+            ->where('start_time', $value);
+
+        if ($this->recipient) {
+            $query->where('recipient_id', $this->recipient->id)
+                ->where('recipient_type', get_class($this->recipient));
+        }
+
+        if ($query->exists()) {
+            $fail('A reservation at this time already exists.');
+        }
+    }
+
+    private function validateNoTimeOverlap($value, $fail): void
+    {
+        $overlapQuery = Reservation::query()
+            ->where('provider_id', $this->provider->id)
+            ->where('provider_type', get_class($this->provider))
+            ->where(function ($query) use ($value) {
+                $query->where('start_time', '<=', $value)
+                    ->where('end_time', '>', $value);
+            });
+
+        if ($this->recipient) {
+            $overlapQuery->where('recipient_id', $this->recipient->id)
+                ->where('recipient_type', get_class($this->recipient));
+        }
+
+        if ($overlapQuery->exists()) {
+            $fail('This reservation conflicts with an existing reservation time.');
+        }
     }
 }

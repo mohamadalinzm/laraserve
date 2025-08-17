@@ -7,11 +7,11 @@ use Nazemi\Laraserve\Exceptions\ReservationAlreadyBookedException;
 use Nazemi\Laraserve\Exceptions\ExpiredReservationException;
 use Nazemi\Laraserve\Exceptions\UnauthorizedReservationCancellationException;
 use Nazemi\Laraserve\Models\Reservation;
-use Nazemi\Laraserve\Tests\TestModels\Client;
+use Nazemi\Laraserve\Tests\TestModels\Recipient;
 use Nazemi\Laraserve\Tests\Traits\SetUpDatabase;
 use Orchestra\Testbench\TestCase;
 
-class ClientTest extends TestCase
+class RecipientTest extends TestCase
 {
     use RefreshDatabase,SetUpDatabase;
 
@@ -19,13 +19,13 @@ class ClientTest extends TestCase
     {
         //Arrange
         $data = $this->generateReservation();
-        unset($data['clientable_id']);
-        unset($data['clientable_type']);
+        unset($data['recipient_id']);
+        unset($data['recipient_type']);
         //Act
-        $reservation = $this->agent->agentReservations()->create($data);
-        $this->client->bookReservation($reservation);
-        $data['clientable_id'] = $this->client->id;
-        $data['clientable_type'] = get_class($this->client);
+        $reservation = $this->provider->providedReservations()->create($data);
+        $this->recipient->reserve($reservation);
+        $data['recipient_id'] = $this->recipient->id;
+        $data['recipient_type'] = get_class($this->recipient);
         //Assert
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertDatabaseHas('reservations', $data);
@@ -37,16 +37,16 @@ class ClientTest extends TestCase
         //Arrange
         $data = $this->generateReservation();
         //Act
-        $reservation = $this->agent->agentReservations()->create($data);
-        $this->client->bookReservation($reservation);
-        $newClient = Client::query()->create(['name' => 'new client']);
+        $reservation = $this->provider->providedReservations()->create($data);
+        $this->recipient->reserve($reservation);
+        $newRecipient = Recipient::query()->create(['name' => 'new recipient']);
         try {
 
-            $newClient->bookReservation($reservation);
+            $newRecipient->reserve($reservation);
 
         } catch (ReservationAlreadyBookedException $e) {
             //Assert
-            $this->assertEquals('Reservation is already booked by another client.', $e->getMessage());
+            $this->assertEquals('Reservation is already booked by another recipient.', $e->getMessage());
 
             throw $e;
         }
@@ -61,10 +61,10 @@ class ClientTest extends TestCase
             'end_time' => now()->subDays(2)->addHour(),
         ];
         //Act
-        $reservation = $this->agent->agentReservations()->create($data);
+        $reservation = $this->provider->providedReservations()->create($data);
         try {
 
-            $this->client->bookReservation($reservation);
+            $this->recipient->reserve($reservation);
 
         } catch (ExpiredReservationException $e) {
             //Assert
@@ -74,23 +74,23 @@ class ClientTest extends TestCase
         }
     }
 
-    public function test_get_reservations_of_client()
+    public function test_get_reservations_of_recipient()
     {
         //Arrange
         $data = $this->generateReservation();
         //Act
-        $reservation = $this->agent->agentReservations()->create($data);
-        $reservation2 = $this->agent->agentReservations()->create([
+        $reservation = $this->provider->providedReservations()->create($data);
+        $reservation2 = $this->provider->providedReservations()->create([
             'start_time' => now()->addDays(2),
             'end_time' => now()->addDays(2)->addHour(),
-            'clientable_id' => $this->client->id,
-            'clientable_type' => get_class($this->client),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
         ]);
-        $reservation3 = $this->agent->agentReservations()->create([
+        $reservation3 = $this->provider->providedReservations()->create([
             'start_time' => now()->subDays(2),
             'end_time' => now()->subDays(2)->addHour(),
-            'clientable_id' => $this->client->id,
-            'clientable_type' => get_class($this->client),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
         ]);
         //Assert
         $this->assertInstanceOf(Reservation::class, $reservation);
@@ -100,46 +100,46 @@ class ClientTest extends TestCase
         $this->assertDatabaseHas('reservations', [
             'start_time' => $reservation2->start_time,
             'end_time' => $reservation2->end_time,
-            'clientable_id' => $this->client->id,
-            'clientable_type' => get_class($this->client),
-            'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
         ]);
         $this->assertDatabaseHas('reservations', [
             'start_time' => $reservation3->start_time,
             'end_time' => $reservation3->end_time,
-            'clientable_id' => $this->client->id,
-            'clientable_type' => get_class($this->client),
-            'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
         ]);
-        $this->assertCount(3, $this->client->clientReservations);
+        $this->assertCount(3, $this->recipient->receivedReservations);
     }
 
-    public function test_client_see_only_booked_reservations()
+    public function test_recipient_see_only_booked_reservations()
     {
         //Arrange
-        $newClient = Client::query()->create(['name' => 'new client']);
+        $newRecipient = Recipient::query()->create(['name' => 'new recipient']);
         $data = $this->generateReservation();
-        unset($data['clientable_id']);
-        unset($data['clientable_type']);
+        unset($data['recipient_id']);
+        unset($data['recipient_type']);
         //Act
-        $reservation = $this->agent->agentReservations()->create($data);
-        $reservation2 = $this->agent->agentReservations()->create([
+        $reservation = $this->provider->providedReservations()->create($data);
+        $reservation2 = $this->provider->providedReservations()->create([
             'start_time' => now()->addDays(2),
             'end_time' => now()->addDays(2)->addHour(),
-            'clientable_id' => $this->client->id,
-            'clientable_type' => get_class($this->client),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
         ]);
-        $newReservation = $this->agent->agentReservations()->create([
+        $newReservation = $this->provider->providedReservations()->create([
             'start_time' => now()->addDays(3),
             'end_time' => now()->addDays(3)->addHour(),
-            'clientable_id' => $newClient->id,
-            'clientable_type' => get_class($newClient),
+            'recipient_id' => $newRecipient->id,
+            'recipient_type' => get_class($newRecipient),
         ]);
-        $this->client->bookReservation($reservation);
-        $data['clientable_id'] = $this->client->id;
-        $data['clientable_type'] = get_class($this->client);
+        $this->recipient->reserve($reservation);
+        $data['recipient_id'] = $this->recipient->id;
+        $data['recipient_type'] = get_class($this->recipient);
         //Assert
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertInstanceOf(Reservation::class, $reservation2);
@@ -148,46 +148,46 @@ class ClientTest extends TestCase
         $this->assertDatabaseHas('reservations', [
             'start_time' => $reservation2->start_time,
             'end_time' => $reservation2->end_time,
-            'clientable_id' => $this->client->id,
-            'clientable_type' => get_class($this->client),
-            'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
         ]);
         $this->assertDatabaseHas('reservations', [
             'start_time' => $newReservation->start_time,
             'end_time' => $newReservation->end_time,
-            'clientable_id' => $newClient->id,
-            'clientable_type' => get_class($newClient),
-            'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent),
+            'recipient_id' => $newRecipient->id,
+            'recipient_type' => get_class($newRecipient),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
         ]);
-        $this->assertCount(2, $this->client->getClientBookedSlots());
+        $this->assertCount(2, $this->recipient->receivedReservations()->get());
     }
 
-    public function test_client_see_only_upcoming_booked_reservations()
+    public function test_recipient_see_only_upcoming_booked_reservations()
     {
         //Arrange
-        $newClient = Client::query()->create(['name' => 'new client']);
+        $newRecipient = Recipient::query()->create(['name' => 'new recipient']);
         $data = $this->generateReservation();
-        unset($data['clientable_id']);
-        unset($data['clientable_type']);
+        unset($data['recipient_id']);
+        unset($data['recipient_type']);
         //Act
-        $reservation = $this->agent->agentReservations()->create($data);
-        $reservation2 = $this->agent->agentReservations()->create([
+        $reservation = $this->provider->providedReservations()->create($data);
+        $reservation2 = $this->provider->providedReservations()->create([
             'start_time' => now()->subDays(2),
             'end_time' => now()->subDays(2)->addHour(),
-            'clientable_id' => $this->client->id,
-            'clientable_type' => get_class($this->client),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
         ]);
-        $newReservation = $this->agent->agentReservations()->create([
+        $newReservation = $this->provider->providedReservations()->create([
             'start_time' => now()->subDays(3),
             'end_time' => now()->subDays(3)->addHour(),
-            'clientable_id' => $newClient->id,
-            'clientable_type' => get_class($newClient),
+            'recipient_id' => $newRecipient->id,
+            'recipient_type' => get_class($newRecipient),
         ]);
-        $this->client->bookReservation($reservation);
-        $data['clientable_id'] = $this->client->id;
-        $data['clientable_type'] = get_class($this->client);
+        $this->recipient->reserve($reservation);
+        $data['recipient_id'] = $this->recipient->id;
+        $data['recipient_type'] = get_class($this->recipient);
         //Assert
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertInstanceOf(Reservation::class, $reservation2);
@@ -196,68 +196,69 @@ class ClientTest extends TestCase
         $this->assertDatabaseHas('reservations', [
             'start_time' => $reservation2->start_time,
             'end_time' => $reservation2->end_time,
-            'clientable_id' => $this->client->id,
-            'clientable_type' => get_class($this->client),
-            'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent),
+            'recipient_id' => $this->recipient->id,
+            'recipient_type' => get_class($this->recipient),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
         ]);
         $this->assertDatabaseHas('reservations', [
             'start_time' => $newReservation->start_time,
             'end_time' => $newReservation->end_time,
-            'clientable_id' => $newClient->id,
-            'clientable_type' => get_class($newClient),
-            'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent),
+            'recipient_id' => $newRecipient->id,
+            'recipient_type' => get_class($newRecipient),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
         ]);
-        $this->assertCount(1, $this->client->getClientUpcomingBookedSlots());
+        $this->assertCount(2, $this->recipient->receivedReservations()->get());
+        $this->assertCount(1, $newRecipient->receivedReservations()->get());
     }
 
-    public function test_client_create_reservation()
+    public function test_recipient_create_reservation()
     {
         //Arrange
         $data = $this->generateReservation();
-        unset($data['clientable_id']);
-        unset($data['clientable_type']);
+        unset($data['recipient_id']);
+        unset($data['recipient_type']);
         //Act
-        $reservation = $this->client->clientReservations()->create($data);
-        $data['clientable_id'] = $this->client->id;
-        $data['clientable_type'] = get_class($this->client);
+        $reservation = $this->recipient->receivedReservations()->create($data);
+        $data['recipient_id'] = $this->recipient->id;
+        $data['recipient_type'] = get_class($this->recipient);
         //Assert
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertDatabaseHas('reservations', $data);
     }
 
-    public function test_client_cancel_reservation()
+    public function test_recipient_cancel_reservation()
     {
         //Arrange
         $data = $this->generateReservation();
         //Act
-        $reservation = $this->client->clientReservations()->create($data);
-        $this->client->cancelReservation($reservation);
+        $reservation = $this->recipient->receivedReservations()->create($data);
+        $this->recipient->cancel($reservation);
         //Assert
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertDatabaseHas('reservations', [
             'start_time' => $reservation->start_time,
             'end_time' => $reservation->end_time,
-            'clientable_id' => null,
-            'clientable_type' => null,
-            'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent),
+            'recipient_id' => null,
+            'recipient_type' => null,
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
         ]);
     }
 
-    public function test_client_cancel_reservation_that_not_booked()
+    public function test_recipient_cancel_reservation_that_not_booked()
     {
         $this->expectException(UnauthorizedReservationCancellationException::class);
         //Arrange
         $data = $this->generateReservation();
-        unset($data['clientable_id']);
-        unset($data['clientable_type']);
+        unset($data['recipient_id']);
+        unset($data['recipient_type']);
         //Act
-        $reservation = $this->agent->agentReservations()->create($data);
+        $reservation = $this->provider->providedReservations()->create($data);
         try {
 
-            $this->client->cancelReservation($reservation);
+            $this->recipient->cancel($reservation);
 
         } catch (UnauthorizedReservationCancellationException $e) {
             //Assert
@@ -267,17 +268,17 @@ class ClientTest extends TestCase
         }
     }
 
-    public function test_client_cancel_reservation_that_booked_by_another_client()
+    public function test_recipient_cancel_reservation_that_booked_by_another_recipient()
     {
         $this->expectException(UnauthorizedReservationCancellationException::class);
         //Arrange
         $data = $this->generateReservation();
         //Act
-        $reservation = $this->client->clientReservations()->create($data);
-        $newClient = Client::query()->create(['name' => 'new client']);
+        $reservation = $this->recipient->receivedReservations()->create($data);
+        $newRecipient = Recipient::query()->create(['name' => 'new recipient']);
         try {
 
-            $newClient->cancelReservation($reservation);
+            $newRecipient->cancel($reservation);
 
         } catch (UnauthorizedReservationCancellationException $e) {
             //Assert
@@ -287,20 +288,20 @@ class ClientTest extends TestCase
         }
     }
 
-    public function test_client_cancel_reservation_that_in_the_past()
+    public function test_recipient_cancel_reservation_that_in_the_past()
     {
         $this->expectException(ExpiredReservationException::class);
         //Arrange
         $data = [
             'start_time' => now()->subDays(2),
             'end_time' => now()->subDays(2)->addHour(),
-            'agentable_id' => $this->agent->id,
-            'agentable_type' => get_class($this->agent),
+            'provider_id' => $this->provider->id,
+            'provider_type' => get_class($this->provider),
         ];
-        $reservation = $this->client->clientReservations()->create($data);
+        $reservation = $this->recipient->receivedReservations()->create($data);
         //Act
         try {
-            $this->client->cancelReservation($reservation);
+            $this->recipient->cancel($reservation);
         } catch (ExpiredReservationException $e) {
             //Assert
             $this->assertEquals('Reservations in the past cannot be booked or cancelled.', $e->getMessage());

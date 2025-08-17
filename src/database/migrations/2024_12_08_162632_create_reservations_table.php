@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
-            $table->morphs('agentable');
-            $table->nullableMorphs('clientable');
+            $table->morphs('provider');
+            $table->nullableMorphs('recipient');
             $table->timestamp('start_time');
             $table->timestamp('end_time');
             $table->text('note')->nullable();
             $table->timestamps();
 
-            $table->unique(['agentable_id', 'agentable_type', 'start_time']);
+            $table->unique(['provider_id', 'provider_type', 'start_time']);
         });
     }
 

@@ -6,46 +6,46 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Nazemi\Laraserve\Models\Reservation;
 
-trait Agentable
+trait IsProvider
 {
-    public function agentReservations(): MorphMany
+    public function providedReservations(): MorphMany
     {
-        return $this->morphMany(Reservation::class, 'agentable');
+        return $this->morphMany(Reservation::class, 'provider');
     }
 
     public function getAvailableSlots(): Collection
     {
-        return $this->agentReservations()
-            ->whereNull('clientable_id')
+        return $this->providedReservations()
+            ->whereNull('recipient_id')
             ->where('start_time', '>', now())
             ->get();
     }
 
-    public function getAgentBookedSlots(): Collection
+    public function getBookedSlots(): Collection
     {
-        return $this->agentReservations()
-            ->whereNotNull('clientable_id')
+        return $this->providedReservations()
+            ->whereNotNull('recipient_id')
             ->get();
     }
 
-    public function getAgentUpcomingBookedSlots(): Collection
+    public function getUpcomingBookedSlots(): Collection
     {
-        return $this->agentReservations()
-            ->whereNotNull('clientable_id')
+        return $this->providedReservations()
+            ->whereNotNull('recipient_id')
             ->where('start_time', '>', now())
             ->get();
     }
 
     public function getSlotsByDate($date): Collection
     {
-        return $this->agentReservations()
+        return $this->providedReservations()
             ->whereDate('start_time', $date)
             ->get();
     }
 
     public function findSlotByDate($date): Reservation
     {
-        return $this->agentReservations()
+        return $this->providedReservations()
             ->where('start_time', $date)
             ->firstOrFail();
     }

@@ -38,18 +38,18 @@ class ReservationTest extends TestCase
 
     public function test_create_reservation_via_facade()
     {
-        $reservation = ReservationFacade::setAgent($this->agent)
-            ->setClient($this->client)
+        $reservation = ReservationFacade::setProvider($this->provider)
+            ->setRecipient($this->recipient)
             ->startTime(now()->format('Y-m-d H:i'))
             ->endTime(now()->addMinutes(30)->format('Y-m-d H:i'))
             ->save();
 
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertDatabaseHas('reservations', [
-            'agentable_type' => get_class($this->agent),
-            'agentable_id' => $this->agent->id,
-            'clientable_type' => get_class($this->client),
-            'clientable_id' => $this->client->id,
+            'provider_type' => get_class($this->provider),
+            'provider_id' => $this->provider->id,
+            'recipient_type' => get_class($this->recipient),
+            'recipient_id' => $this->recipient->id,
             'start_time' => $reservation->start_time,
             'end_time' => $reservation->end_time,
         ]);
@@ -60,8 +60,8 @@ class ReservationTest extends TestCase
         //Arrange
         $note = 'This is a note';
         //Act
-        $reservation = ReservationFacade::setAgent($this->agent)
-            ->setClient($this->client)
+        $reservation = ReservationFacade::setProvider($this->provider)
+            ->setRecipient($this->recipient)
             ->startTime(now()->format('Y-m-d H:i'))
             ->endTime(now()->addMinutes(30)->format('Y-m-d H:i'))
             ->note($note)
@@ -69,10 +69,10 @@ class ReservationTest extends TestCase
         //Assert
         $this->assertInstanceOf(Reservation::class, $reservation);
         $this->assertDatabaseHas('reservations', [
-            'agentable_type' => get_class($this->agent),
-            'agentable_id' => $this->agent->id,
-            'clientable_type' => get_class($this->client),
-            'clientable_id' => $this->client->id,
+            'provider_type' => get_class($this->provider),
+            'provider_id' => $this->provider->id,
+            'recipient_type' => get_class($this->recipient),
+            'recipient_id' => $this->recipient->id,
             'start_time' => $reservation->start_time,
             'end_time' => $reservation->end_time,
             'note' => $note,
@@ -83,7 +83,7 @@ class ReservationTest extends TestCase
     {
         $duration = 30;
         $count = 3;
-        $reservations = ReservationFacade::setAgent($this->agent)
+        $reservations = ReservationFacade::setProvider($this->provider)
             ->startTime(now()->format('Y-m-d H:i'))
             ->duration($duration)
             ->count($count)
@@ -95,8 +95,8 @@ class ReservationTest extends TestCase
         foreach ($reservations as $reservation) {
             $this->assertInstanceOf(Reservation::class, $reservation);
             $this->assertDatabaseHas('reservations', [
-                'agentable_type' => get_class($this->agent),
-                'agentable_id' => $this->agent->id,
+                'provider_type' => get_class($this->provider),
+                'provider_id' => $this->provider->id,
                 'start_time' => $reservation->start_time,
                 'end_time' => $reservation->end_time,
             ]);
@@ -109,8 +109,8 @@ class ReservationTest extends TestCase
 
         try {
 
-            ReservationFacade::setAgent($this->agent)
-                ->setClient($this->client)
+            ReservationFacade::setProvider($this->provider)
+                ->setRecipient($this->recipient)
                 ->startTime(now()->format('Y-m-d H:i'))
                 ->count(3)
                 ->save();
@@ -131,8 +131,8 @@ class ReservationTest extends TestCase
 
         try {
 
-            ReservationFacade::setAgent($this->agent)
-                ->setClient($this->client)
+            ReservationFacade::setProvider($this->provider)
+                ->setRecipient($this->recipient)
                 ->startTime(now()->format('Y-m-d H:i'))
                 ->duration(30)
                 ->save();
@@ -153,8 +153,8 @@ class ReservationTest extends TestCase
 
         try {
 
-            ReservationFacade::setAgent($this->agent)
-                ->setClient($this->client)
+            ReservationFacade::setProvider($this->provider)
+                ->setRecipient($this->recipient)
                 ->startTime(now()->format('Y-m-d H:i'))
                 ->save();
 
@@ -173,8 +173,8 @@ class ReservationTest extends TestCase
 
         try {
 
-            ReservationFacade::setAgent($this->agent)
-                ->setClient($this->client)
+            ReservationFacade::setProvider($this->provider)
+                ->setRecipient($this->recipient)
                 ->save();
 
         } catch (ValidationException $e) {
@@ -197,10 +197,10 @@ class ReservationTest extends TestCase
             $data['start_time'] = now()->format('Y-m-d H:i');
             $data['end_time'] = now()->addMinutes(30)->format('Y-m-d H:i');
 
-            $this->agent->agentReservations()->create($data);
+            $this->provider->providedReservations()->create($data);
 
-            ReservationFacade::setAgent($this->agent)
-                ->setClient($this->client)
+            ReservationFacade::setProvider($this->provider)
+                ->setRecipient($this->recipient)
                 ->startTime(now()->addMinutes(10)->format('Y-m-d H:i'))
                 ->endTime(now()->addMinutes(40)->format('Y-m-d H:i'))
                 ->save();

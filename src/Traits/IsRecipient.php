@@ -9,56 +9,49 @@ use Nazemi\Laraserve\Exceptions\ExpiredReservationException;
 use Nazemi\Laraserve\Exceptions\UnauthorizedReservationCancellationException;
 use Nazemi\Laraserve\Models\Reservation;
 
-trait Clientable
+trait IsRecipient
 {
-    public function clientReservations(): MorphMany
+    public function receivedReservations(): MorphMany
     {
-        return $this->morphMany(Reservation::class, 'clientable');
+        return $this->morphMany(Reservation::class, 'recipient');
     }
 
-    public function getClientBookedSlots(): Collection
+    public function getUpcomingReservations(): Collection
     {
-        return $this->clientReservations()
+        return $this->receivedReservations()
             ->where('start_time', '>', now())
             ->get();
     }
 
-    public function getClientUpcomingBookedSlots(): Collection
-    {
-        return $this->clientReservations()
-            ->where('start_time', '>', now())
-            ->get();
-    }
-
-    public function bookReservation(Reservation $reservation): Reservation
+    public function reserve(Reservation $reservation): Reservation
     {
         if ($reservation->start_time < now()) {
             throw new ExpiredReservationException;
         }
 
-        if ($reservation->clientable_id !== null) {
+        if ($reservation->recipient_id !== null) {
             throw new ReservationAlreadyBookedException;
         }
 
         return tap($reservation)->update([
-            'clientable_id' => $this->id,
-            'clientable_type' => get_class($this),
+            'recipient_id' => $this->id,
+            'recipient_type' => get_class($this),
         ]);
     }
 
-    public function cancelReservation(Reservation $reservation)
+    public function cancel(Reservation $reservation)
     {
         if ($reservation->start_time < now()) {
             throw new ExpiredReservationException;
         }
 
-        if ($reservation->clientable_id !== $this->id) {
+        if ($reservation->recipient_id !== $this->id) {
             throw new UnauthorizedReservationCancellationException;
         }
 
         return tap($reservation)->update([
-            'clientable_id' => null,
-            'clientable_type' => null,
+            'recipient_id' => null,
+            'recipient_type' => null,
         ]);
     }
 }

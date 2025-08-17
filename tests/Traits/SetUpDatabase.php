@@ -4,17 +4,17 @@ namespace Nazemi\Laraserve\Tests\Traits;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Nazemi\Laraserve\Tests\TestModels\Agent;
-use Nazemi\Laraserve\Tests\TestModels\Client;
+use Nazemi\Laraserve\Tests\TestModels\Provider;
+use Nazemi\Laraserve\Tests\TestModels\Recipient;
 use Nazemi\Laraserve\Tests\TestModels\User;
 
 trait SetUpDatabase
 {
-    protected $agent;
-    protected $userAgent;
+    protected $provider;
+    protected $providerUser;
 
-    protected $client;
-    protected $userClient;
+    protected $recipient;
+    protected $recipientUser;
 
     protected $faker;
 
@@ -24,10 +24,10 @@ trait SetUpDatabase
         $this->setUpDatabase();
 
         $this->faker = \Faker\Factory::create();
-        $this->agent = Agent::query()->create(['name' => $this->faker->name]);
-        $this->userAgent = User::query()->create(['name' => $this->faker->name,'role' => 'agent']);
-        $this->client = Client::query()->create(['name' => $this->faker->name]);
-        $this->userClient = User::query()->create(['name' => $this->faker->name,'role' => 'client']);
+        $this->provider = Provider::query()->create(['name' => $this->faker->name]);
+        $this->providerUser = User::query()->create(['name' => $this->faker->name,'role' => 'provider']);
+        $this->recipient = Recipient::query()->create(['name' => $this->faker->name]);
+        $this->recipientUser = User::query()->create(['name' => $this->faker->name,'role' => 'recipient']);
     }
 
     protected function getEnvironmentSetUp($app): void
@@ -45,13 +45,13 @@ trait SetUpDatabase
     {
         $this->loadMigrationsFrom(__DIR__.'/../../src/database/migrations');
 
-        Schema::create('agents', function (Blueprint $table) {
+        Schema::create('providers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->timestamps();
         });
 
-        Schema::create('clients', function (Blueprint $table) {
+        Schema::create('recipients', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->timestamps();
@@ -60,7 +60,7 @@ trait SetUpDatabase
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->enum('role', ['agent', 'client']);
+            $table->enum('role', ['provider', 'recipient']);
             $table->timestamps();
         });
     }
@@ -77,11 +77,11 @@ trait SetUpDatabase
         $endTime = (clone $startTime)->modify("+{$durationMinutes} minutes");
 
         return [
-            'agentable_type' => Agent::class,
-            'agentable_id' => $this->agent->id,
+            'provider_type' => Provider::class,
+            'provider_id' => $this->provider->id,
 
-            'clientable_type' => Client::class,
-            'clientable_id' => $this->client->id,
+            'recipient_type' => Recipient::class,
+            'recipient_id' => $this->recipient->id,
 
             'start_time' => $startTime->format('Y-m-d H:i'),
             'end_time' => $endTime->format('Y-m-d H:i'),
